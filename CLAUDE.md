@@ -77,3 +77,5 @@ opened on the user's own phone — see `docs/BRIEF.md` for specifics.
 - When something in `docs/BRIEF.md` is ambiguous, ask rather than
   guess — a wrong assumption in the rate-calculation logic is
   expensive to unwind once real bookings exist.
+
+@AGENTS.md
