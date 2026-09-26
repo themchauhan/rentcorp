@@ -74,9 +74,9 @@ passwords are reset by the owner (staff) or super admin (owners).
 | `profiles` | id (Auth user), tenant_id, name, mobile (login id), role (ADMIN/STAFF), status |
 | `platform_admins` | user_id (Auth user), name — SUPER_ADMIN accounts, not tied to a tenant |
 | `rental_items` | id, tenant_id, name, category, unit_label, total_quantity_owned, rate_paise (integer paise), rate_unit (`PER_DAY`\|`PER_EVENT`), active |
-| `rental_customers` | id, tenant_id, name, mobile, whatsapp_number (nullable, defaults to mobile), preferred_channel (`WHATSAPP`\|`SMS`), address |
-| `rental_orders` | id, tenant_id, customer_id, order_date, event_start_date, expected_return_date, status (`ACTIVE`\|`PARTIALLY_RETURNED`\|`RETURNED`\|`OVERDUE`\|`CANCELLED`), security_deposit_amount (nullable), discount_type (`NONE`\|`FLAT`\|`PERCENT`), discount_value, discount_reason (nullable), discount_updated_by, discount_updated_at, notes, created_by |
-| `rental_order_items` | id, rental_order_id, rental_item_id, quantity, rate_amount_snapshot, rate_unit_snapshot |
+| `rental_customers` | id, tenant_id, name, mobile, whatsapp_number (nullable = not on WhatsApp; defaults to mobile), preferred_channel (`WHATSAPP`\|`SMS`), address |
+| `rental_orders` | id, tenant_id, customer_id, order_date, event_start_date, expected_return_date, status (`ACTIVE`\|`PARTIALLY_RETURNED`\|`RETURNED`\|`OVERDUE`\|`CANCELLED`), booking_number (per business), event_start_time (optional), security_deposit_paise (nullable), discount_type (`NONE`\|`FLAT`\|`PERCENT`), discount_value, discount_reason (nullable), discount_updated_by, discount_updated_at, notes, created_by |
+| `rental_order_items` | id, tenant_id, rental_order_id, rental_item_id, quantity, item_name_snapshot, unit_label_snapshot, rate_paise_snapshot, rate_unit_snapshot |
 | `rental_returns` | id, rental_order_item_id, quantity_returned, returned_at, condition_notes |
 | `rental_payments` | id, rental_order_id, amount, mode (`CASH`\|`UPI`\|`CARD`\|`OTHER`), received_by, received_at, note |
 | `message_log` | id, tenant_id, rental_order_id, message_type (`BOOKING_CONFIRMATION`\|`AMOUNT_DUE`\|`RETURN_CONFIRMATION`), channel (`WHATSAPP`\|`SMS`\|`COPY`), to_number, body_snapshot, amount_due_snapshot, sent_by, opened_at |
@@ -105,8 +105,12 @@ never from the client. RLS scopes every query to it.
 - All money is stored and calculated as integer paise, never floats;
   a % discount is rounded to the nearest paisa (half up). Displayed as
   ₹ with 2 decimals only where non-zero.
-- Document and unit-test the partial-day rounding rule explicitly
-  (e.g. any part of a day counts as a full day).
+- **Day-count rule (decided):** PER_DAY items are charged for every IST
+  calendar day they are out, counting both the first and last day —
+  any part of a day counts as a full day (12 → 14 Oct = 3 days,
+  same-day = 1). PER_EVENT items are charged once per booking.
+  Implemented and unit-tested in `src/lib/pricing.ts`.
+- Discount value: FLAT in paise; PERCENT in basis points (1000 = 10%).
 
 ## Pricing and discounts
 

@@ -106,6 +106,53 @@ export type Database = {
           },
         ];
       };
+      rental_customers: {
+        Row: {
+          address: string | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          mobile: string;
+          name: string;
+          preferred_channel: Database["public"]["Enums"]["message_channel"];
+          tenant_id: string;
+          updated_at: string;
+          whatsapp_number: string | null;
+        };
+        Insert: {
+          address?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          mobile: string;
+          name: string;
+          preferred_channel?: Database["public"]["Enums"]["message_channel"];
+          tenant_id?: string;
+          updated_at?: string;
+          whatsapp_number?: string | null;
+        };
+        Update: {
+          address?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          mobile?: string;
+          name?: string;
+          preferred_channel?: Database["public"]["Enums"]["message_channel"];
+          tenant_id?: string;
+          updated_at?: string;
+          whatsapp_number?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rental_customers_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       rental_items: {
         Row: {
           active: boolean;
@@ -159,6 +206,148 @@ export type Database = {
           },
         ];
       };
+      rental_order_items: {
+        Row: {
+          created_at: string;
+          id: string;
+          item_name_snapshot: string;
+          quantity: number;
+          rate_paise_snapshot: number;
+          rate_unit_snapshot: Database["public"]["Enums"]["rate_unit"];
+          rental_item_id: string;
+          rental_order_id: string;
+          tenant_id: string;
+          unit_label_snapshot: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          item_name_snapshot: string;
+          quantity: number;
+          rate_paise_snapshot: number;
+          rate_unit_snapshot: Database["public"]["Enums"]["rate_unit"];
+          rental_item_id: string;
+          rental_order_id: string;
+          tenant_id?: string;
+          unit_label_snapshot: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          item_name_snapshot?: string;
+          quantity?: number;
+          rate_paise_snapshot?: number;
+          rate_unit_snapshot?: Database["public"]["Enums"]["rate_unit"];
+          rental_item_id?: string;
+          rental_order_id?: string;
+          tenant_id?: string;
+          unit_label_snapshot?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rental_order_items_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rental_order_items_tenant_id_rental_item_id_fkey";
+            columns: ["tenant_id", "rental_item_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_items";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "rental_order_items_tenant_id_rental_order_id_fkey";
+            columns: ["tenant_id", "rental_order_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_orders";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      rental_orders: {
+        Row: {
+          booking_number: number;
+          created_at: string;
+          created_by: string | null;
+          customer_id: string;
+          discount_reason: string | null;
+          discount_type: Database["public"]["Enums"]["discount_type"];
+          discount_updated_at: string | null;
+          discount_updated_by: string | null;
+          discount_value: number;
+          event_start_date: string;
+          event_start_time: string | null;
+          expected_return_date: string;
+          id: string;
+          notes: string | null;
+          order_date: string;
+          security_deposit_paise: number | null;
+          status: Database["public"]["Enums"]["booking_status"];
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          booking_number: number;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id: string;
+          discount_reason?: string | null;
+          discount_type?: Database["public"]["Enums"]["discount_type"];
+          discount_updated_at?: string | null;
+          discount_updated_by?: string | null;
+          discount_value?: number;
+          event_start_date: string;
+          event_start_time?: string | null;
+          expected_return_date: string;
+          id?: string;
+          notes?: string | null;
+          order_date?: string;
+          security_deposit_paise?: number | null;
+          status?: Database["public"]["Enums"]["booking_status"];
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Update: {
+          booking_number?: number;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id?: string;
+          discount_reason?: string | null;
+          discount_type?: Database["public"]["Enums"]["discount_type"];
+          discount_updated_at?: string | null;
+          discount_updated_by?: string | null;
+          discount_value?: number;
+          event_start_date?: string;
+          event_start_time?: string | null;
+          expected_return_date?: string;
+          id?: string;
+          notes?: string | null;
+          order_date?: string;
+          security_deposit_paise?: number | null;
+          status?: Database["public"]["Enums"]["booking_status"];
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rental_orders_tenant_id_customer_id_fkey";
+            columns: ["tenant_id", "customer_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_customers";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "rental_orders_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           created_at: string;
@@ -203,6 +392,28 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      create_booking: {
+        Args: {
+          p_customer_id: string;
+          p_discount_reason?: string;
+          p_discount_type?: Database["public"]["Enums"]["discount_type"];
+          p_discount_value?: number;
+          p_event_start_date: string;
+          p_event_start_time?: string;
+          p_expected_return_date: string;
+          p_lines: Json;
+          p_notes?: string;
+          p_security_deposit_paise?: number;
+        };
+        Returns: string;
+      };
+      item_commitments: {
+        Args: { p_end: string; p_start: string };
+        Returns: {
+          committed: number;
+          rental_item_id: string;
+        }[];
+      };
       mark_password_changed: { Args: Record<PropertyKey, never>; Returns: undefined };
       provision_tenant_with_owner: {
         Args: {
@@ -218,6 +429,9 @@ export type Database = {
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "STAFF";
+      booking_status: "ACTIVE" | "PARTIALLY_RETURNED" | "RETURNED" | "OVERDUE" | "CANCELLED";
+      discount_type: "NONE" | "FLAT" | "PERCENT";
+      message_channel: "WHATSAPP" | "SMS";
       profile_status: "ACTIVE" | "INACTIVE";
       rate_unit: "PER_DAY" | "PER_EVENT";
       tenant_status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
@@ -333,6 +547,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["SUPER_ADMIN", "ADMIN", "STAFF"],
+      booking_status: ["ACTIVE", "PARTIALLY_RETURNED", "RETURNED", "OVERDUE", "CANCELLED"],
+      discount_type: ["NONE", "FLAT", "PERCENT"],
+      message_channel: ["WHATSAPP", "SMS"],
       profile_status: ["ACTIVE", "INACTIVE"],
       rate_unit: ["PER_DAY", "PER_EVENT"],
       tenant_status: ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"],

@@ -36,7 +36,15 @@ export const IDS = {
   staffA: "a0000000-0000-4000-8000-000000000002",
   itemA_plasticChair: "a1000000-0000-4000-8000-000000000001",
   itemB_foldingChair: "b1000000-0000-4000-8000-000000000001",
+  customerA_ravi: "a2000000-0000-4000-8000-000000000001",
+  bookingA_seed: "a3000000-0000-4000-8000-000000000001",
 } as const;
+
+/** Today in IST plus `days`, as YYYY-MM-DD. */
+export function istDate(days = 0): string {
+  const now = new Date(Date.now() + days * 86_400_000);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(now);
+}
 
 /** Unique suffix so parallel/repeated runs don't collide on names. */
 export const uniq = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;

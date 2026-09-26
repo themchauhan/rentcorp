@@ -86,3 +86,25 @@ values
   ('b1000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Folding chair', 'Furniture', 'piece', 300, 1200, 'PER_DAY', true),
   ('b1000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Wedding tent 40x60 ft', 'Tents & Shamiana', 'piece', 2, 800000, 'PER_EVENT', true),
   ('b1000000-0000-4000-8000-000000000003', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'DJ speaker', 'Sound', 'pair', 4, 300000, 'PER_EVENT', true);
+
+-- Customers (dummy names, obviously fake 9111111xxx numbers).
+insert into public.rental_customers (id, tenant_id, name, mobile, whatsapp_number, preferred_channel, address)
+values
+  ('a2000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Demo Customer Ravi', '9111111101', '9111111101', 'WHATSAPP', 'Demo Colony, Plot 1'),
+  ('a2000000-0000-4000-8000-000000000002', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Demo Customer Sunita', '9111111102', null, 'SMS', null),
+  ('b2000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Demo Customer Imran', '9111111201', '9111111201', 'WHATSAPP', null);
+
+-- Bookings (dates relative to today, IST). Line rates are snapshotted from
+-- the catalog by trigger; the values below are placeholders.
+insert into public.rental_orders (id, tenant_id, customer_id, event_start_date, event_start_time, expected_return_date, notes)
+values
+  ('a3000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a2000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Kolkata')::date, '09:00', (now() at time zone 'Asia/Kolkata')::date + 2, 'Demo wedding booking'),
+  ('b3000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'b2000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Kolkata')::date, null, (now() at time zone 'Asia/Kolkata')::date, null);
+
+insert into public.rental_order_items (tenant_id, rental_order_id, rental_item_id, quantity, item_name_snapshot, unit_label_snapshot, rate_paise_snapshot, rate_unit_snapshot)
+values
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a3000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000001', 100, '', '', 0, 'PER_DAY'),
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a3000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000003', 1, '', '', 0, 'PER_DAY'),
+  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'b3000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001', 50, '', '', 0, 'PER_DAY');
