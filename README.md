@@ -28,8 +28,8 @@ global installs are needed.
 ## Local setup
 
 ```bash
-git clone <repo-url> tent-house-management
-cd tent-house-management
+git clone <repo-url> rentingcorp
+cd rentingcorp
 npm install
 ```
 
