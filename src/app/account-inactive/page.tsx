@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
-import { tenantAccess } from "@/lib/auth/access";
 import { getSessionProfile } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Account inactive" };
@@ -12,15 +11,10 @@ export default async function AccountInactivePage() {
   if (!profile) redirect("/login");
   if (profile.kind === "platform") redirect("/admin");
 
-  let message = "Your account has been deactivated. Contact your business owner.";
-  if (profile.status === "ACTIVE" && profile.tenant) {
-    const access = tenantAccess(profile.tenant);
-    if (access.ok) redirect("/");
-    message =
-      access.reason === "SUSPENDED"
-        ? `${profile.tenant.name}'s account is suspended. Please contact support.`
-        : `${profile.tenant.name}'s subscription has ended. Please contact support to renew.`;
-  }
+  // Businesses without access are read-only (handled in the app), so this
+  // page is only for deactivated user accounts.
+  if (profile.status === "ACTIVE" && profile.tenant) redirect("/");
+  const message = "Your account has been deactivated. Contact your business owner.";
 
   return (
     <main className="mx-auto max-w-sm px-4 py-16 text-center">

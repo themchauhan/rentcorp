@@ -1,6 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { tenantAccess, type Role } from "./access";
+import { tenantAccess, type Role, type TenantAccess } from "./access";
 import { getSessionProfile, type SessionProfile } from "./session";
 
 type TenantProfile = Extract<SessionProfile, { kind: "tenant" }>;
@@ -26,26 +26,48 @@ type ActiveTenantProfile = TenantProfile & {
   tenant: NonNullable<TenantProfile["tenant"]>;
 };
 
+export type TenantMember = ActiveTenantProfile & {
+  /** True when the business's trial/subscription has ended or it's suspended. */
+  readOnly: boolean;
+  access: TenantAccess;
+};
+
 /**
- * Tenant user (ADMIN/STAFF) whose own account is ACTIVE and whose business
- * currently has access. Use on every tenant route and server action.
- * Users still on a temporary password are sent to /change-password unless
+ * Signed-in tenant user (ADMIN/STAFF) with an ACTIVE account. Businesses
+ * without access (expired/suspended) still pass, with `readOnly: true`, so
+ * they can view their data. Use on pages that only read.
+ * Users on a temporary password are sent to /change-password unless
  * `allowTemporaryPassword` is set (only the change-password flow does).
  */
-export async function requireActiveTenant({
+export async function requireTenantMember({
   allowTemporaryPassword = false,
-}: { allowTemporaryPassword?: boolean } = {}): Promise<ActiveTenantProfile> {
+}: { allowTemporaryPassword?: boolean } = {}): Promise<TenantMember> {
   const profile = await requireUser();
   if (profile.kind !== "tenant") redirect("/admin");
   if (profile.status !== "ACTIVE" || !profile.tenant) redirect("/account-inactive");
-  if (!tenantAccess(profile.tenant).ok) redirect("/account-inactive");
   if (profile.mustChangePassword && !allowTemporaryPassword) redirect("/change-password");
-  return profile as ActiveTenantProfile;
+  const access = tenantAccess(profile.tenant);
+  return { ...(profile as ActiveTenantProfile), readOnly: !access.ok, access };
 }
 
-/** Active tenant user with the ADMIN (owner) role, else /no-access. */
-export async function requireTenantAdmin(): Promise<ActiveTenantProfile & { role: "ADMIN" }> {
-  const profile = await requireActiveTenant();
-  if (profile.role !== "ADMIN") redirect("/no-access");
-  return profile as ActiveTenantProfile & { role: "ADMIN" };
+/**
+ * Tenant user whose business currently has access — required for every
+ * page or action that changes data. Read-only businesses are sent Home,
+ * which explains why. (The database enforces the same rule.)
+ */
+export async function requireActiveTenant(
+  opts: { allowTemporaryPassword?: boolean } = {},
+): Promise<TenantMember> {
+  const member = await requireTenantMember(opts);
+  if (member.readOnly) redirect("/");
+  return member;
+}
+
+/** Tenant user with the ADMIN (owner) role, else /no-access. `write: false` allows read-only businesses. */
+export async function requireTenantAdmin({ write = true }: { write?: boolean } = {}): Promise<
+  TenantMember & { role: "ADMIN" }
+> {
+  const member = write ? await requireActiveTenant() : await requireTenantMember();
+  if (member.role !== "ADMIN") redirect("/no-access");
+  return member as TenantMember & { role: "ADMIN" };
 }

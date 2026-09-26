@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { requireActiveTenant } from "@/lib/auth/guards";
 import { todayIST } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { BookingForm } from "./booking-form";
@@ -10,6 +11,7 @@ export default async function NewBookingPage({ searchParams }: PageProps<"/booki
   const raw = (await searchParams).customer;
   const initialCustomerId = Array.isArray(raw) ? raw[0] : raw;
 
+  await requireActiveTenant();
   const supabase = await createClient();
   const [{ data: items }, { data: customers }] = await Promise.all([
     supabase

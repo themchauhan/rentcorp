@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { requireTenantMember } from "@/lib/auth/guards";
 import { normalizeIndianMobile } from "@/lib/auth/mobile";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,6 +12,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
   const raw = (await searchParams).q;
   const q = (Array.isArray(raw) ? raw[0] : raw)?.trim() || "";
 
+  const { readOnly } = await requireTenantMember();
   const supabase = await createClient();
   let query = supabase
     .from("rental_customers")
@@ -33,12 +35,14 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-stone-900">Customers</h1>
-        <Link
-          href="/customers/new"
-          className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
-        >
-          Add customer
-        </Link>
+        {!readOnly && (
+          <Link
+            href="/customers/new"
+            className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
+          >
+            Add customer
+          </Link>
+        )}
       </div>
 
       <form action="/customers" role="search" className="flex gap-2">

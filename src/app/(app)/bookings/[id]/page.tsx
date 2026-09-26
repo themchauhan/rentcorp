@@ -6,7 +6,7 @@ import { Collapsible as Section } from "@/components/collapsible";
 import { SendPanel } from "@/components/send-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { FormMessage } from "@/components/ui/form";
-import { requireActiveTenant } from "@/lib/auth/guards";
+import { requireTenantMember } from "@/lib/auth/guards";
 import { buildBookingMessages, loadTemplates } from "@/lib/booking-messages";
 import { daysOverdue, effectiveStatus } from "@/lib/booking-status";
 import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
@@ -54,7 +54,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   const createdParam = (await searchParams).created === "1";
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const profile = await requireActiveTenant();
+  const profile = await requireTenantMember();
   const isOwner = profile.role === "ADMIN";
   const supabase = await createClient();
   const { data: order } = await supabase
@@ -86,7 +86,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   const status = effectiveStatus(order.status, order.expected_return_date, today);
   const cancelled = order.status === "CANCELLED";
   const closed = order.closed_at !== null;
-  const editable = !cancelled && !closed;
+  const editable = !cancelled && !closed && !profile.readOnly;
   const allBack = order.status === "RETURNED";
   const overdue = daysOverdue(order.expected_return_date, today);
   const customer = order.customer;
@@ -115,17 +115,18 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   // Messages
   // The most relevant message first: booking details right after saving,
   // the final bill once everything is back, otherwise the amount due.
-  const types: MessageType[] = cancelled
-    ? []
-    : allBack
-      ? ["RETURN_CONFIRMATION", "BOOKING_CONFIRMATION"]
-      : created
-        ? due.started
-          ? ["BOOKING_CONFIRMATION", "AMOUNT_DUE"]
-          : ["BOOKING_CONFIRMATION"]
-        : due.started
-          ? ["AMOUNT_DUE", "BOOKING_CONFIRMATION"]
-          : ["BOOKING_CONFIRMATION"];
+  const types: MessageType[] =
+    cancelled || profile.readOnly
+      ? []
+      : allBack
+        ? ["RETURN_CONFIRMATION", "BOOKING_CONFIRMATION"]
+        : created
+          ? due.started
+            ? ["BOOKING_CONFIRMATION", "AMOUNT_DUE"]
+            : ["BOOKING_CONFIRMATION"]
+          : due.started
+            ? ["AMOUNT_DUE", "BOOKING_CONFIRMATION"]
+            : ["BOOKING_CONFIRMATION"];
   const prepared = types.length
     ? buildBookingMessages(stored, profile.tenant.name, await loadTemplates(supabase), types, today)
     : null;

@@ -8,7 +8,7 @@ const linkClass =
   "flex min-h-12 items-center justify-between rounded-lg border border-stone-300 bg-white px-4 font-medium text-stone-700 hover:bg-stone-100";
 
 export default async function SettingsPage() {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ write: false });
   return (
     <section className="max-w-lg space-y-4">
       <h1 className="text-2xl font-bold text-stone-900">Business settings</h1>

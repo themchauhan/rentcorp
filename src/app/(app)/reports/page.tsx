@@ -27,7 +27,7 @@ const ORDER_FIELDS = `id, booking_number, status, event_start_date, expected_ret
   payments:rental_payments (amount_paise)`;
 
 export default async function ReportsPage({ searchParams }: PageProps<"/reports">) {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ write: false });
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   const today = todayIST();

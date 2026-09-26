@@ -30,6 +30,7 @@ test("onboarding: super admin → new business owner → staff", async ({ page }
 
   // Super admin creates the business and its owner.
   await login(page, USERS.superAdmin);
+  await page.getByText("New business", { exact: true }).click();
   await page.getByLabel("Business name").fill(business);
   await page.getByLabel("Owner name").fill("E2E Owner");
   await page.getByLabel("Owner mobile number").fill(ownerMobile);

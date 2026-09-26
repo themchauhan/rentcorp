@@ -85,11 +85,14 @@ test.describe("blocked accounts", () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test("a suspended business sees the account-inactive page, not its data", async ({ page }) => {
+  test("a suspended business can view its data but not change it", async ({ page }) => {
     await login(page, USERS.adminSuspendedC);
-    await page.goto("/bookings");
-    await expect(page).toHaveURL(/\/account-inactive$/);
-    await expect(page.getByText("account is suspended")).toBeVisible();
+    await expect(page.getByTestId("read-only-banner")).toContainText("This account is suspended.");
+    await expect(page.getByRole("link", { name: "New booking" })).toHaveCount(0);
+    await page.goto("/bookings/new");
+    await expect(page).toHaveURL(/\/$/);
+    await page.goto("/items/new");
+    await expect(page).toHaveURL(/\/$/);
   });
 });
 

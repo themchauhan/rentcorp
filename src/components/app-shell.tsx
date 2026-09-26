@@ -2,13 +2,23 @@ import Link from "next/link";
 import { BottomNav, SideNav } from "./nav-links";
 import { SignOutButton } from "./sign-out-button";
 
+const READ_ONLY_TEXT = {
+  SUSPENDED: "This account is suspended.",
+  EXPIRED: "Your subscription has ended.",
+  TRIAL_ENDED: "Your free trial has ended.",
+  SUBSCRIPTION_ENDED: "Your subscription has ended.",
+} as const;
+
 export function AppShell({
   businessName,
   userName,
+  readOnly = null,
   children,
 }: {
   businessName: string;
   userName: string;
+  /** Why the business is read-only, if it is. */
+  readOnly?: keyof typeof READ_ONLY_TEXT | null;
   children: React.ReactNode;
 }) {
   return (
@@ -33,6 +43,16 @@ export function AppShell({
         </header>
         {/* Bottom padding keeps content clear of the fixed phone tab bar. */}
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-24 md:px-8 md:py-8">
+          {readOnly && (
+            <div
+              role="status"
+              className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              data-testid="read-only-banner"
+            >
+              <strong>{READ_ONLY_TEXT[readOnly]}</strong> You can view your bookings and customers
+              but not make changes. Your data is safe. Contact support to renew.
+            </div>
+          )}
           {children}
         </main>
       </div>

@@ -82,7 +82,7 @@ passwords are reset by the owner (staff) or super admin (owners).
 | `message_log` | id, tenant_id, rental_order_id, message_type (`BOOKING_CONFIRMATION`\|`AMOUNT_DUE`\|`RETURN_CONFIRMATION`), channel (`WHATSAPP`\|`SMS`\|`COPY`), to_number, body_snapshot, amount_due_snapshot_paise, sent_by, opened_at |
 | `message_templates` | tenant_id, message_type, body (owner's custom wording; none = default) |
 | `audit_logs` | id, tenant_id, user_id, action, target_type, target_id, metadata, created_at |
-| `subscription_payments` | id, tenant_id, amount, payment_date, payment_method, reference_number, period_start, period_end, notes |
+| `subscription_payments` | id, tenant_id, amount_paise, payment_date, payment_method (`UPI`\|`BANK_TRANSFER`\|`CASH`\|`OTHER`), reference_number, period_start, period_end, notes, recorded_by |
 
 Every table carries `tenant_id`, derived server-side from the session,
 never from the client. RLS scopes every query to it.

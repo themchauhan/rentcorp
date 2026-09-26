@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { PasswordForm } from "@/app/(app)/more/password/password-form";
-import { requireActiveTenant } from "@/lib/auth/guards";
+import { requireTenantMember } from "@/lib/auth/guards";
 import { changeTemporaryPassword } from "./actions";
 
 export const metadata: Metadata = { title: "Choose your password" };
 export const dynamic = "force-dynamic";
 
 export default async function ChangeTemporaryPasswordPage() {
-  const profile = await requireActiveTenant({ allowTemporaryPassword: true });
+  const profile = await requireTenantMember({ allowTemporaryPassword: true });
   if (!profile.mustChangePassword) redirect("/");
 
   return (

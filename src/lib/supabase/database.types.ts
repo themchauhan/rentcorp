@@ -568,6 +568,56 @@ export type Database = {
           },
         ];
       };
+      subscription_payments: {
+        Row: {
+          amount_paise: number;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          payment_date: string;
+          payment_method: Database["public"]["Enums"]["subscription_payment_method"];
+          period_end: string;
+          period_start: string;
+          recorded_by: string | null;
+          reference_number: string | null;
+          tenant_id: string;
+        };
+        Insert: {
+          amount_paise: number;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          payment_date: string;
+          payment_method: Database["public"]["Enums"]["subscription_payment_method"];
+          period_end: string;
+          period_start: string;
+          recorded_by?: string | null;
+          reference_number?: string | null;
+          tenant_id: string;
+        };
+        Update: {
+          amount_paise?: number;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          payment_date?: string;
+          payment_method?: Database["public"]["Enums"]["subscription_payment_method"];
+          period_end?: string;
+          period_start?: string;
+          recorded_by?: string | null;
+          reference_number?: string | null;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           created_at: string;
@@ -664,6 +714,7 @@ export type Database = {
       payment_mode: "CASH" | "UPI" | "CARD" | "OTHER";
       profile_status: "ACTIVE" | "INACTIVE";
       rate_unit: "PER_DAY" | "PER_EVENT";
+      subscription_payment_method: "UPI" | "BANK_TRANSFER" | "CASH" | "OTHER";
       tenant_status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
     };
     CompositeTypes: {
@@ -786,6 +837,7 @@ export const Constants = {
       payment_mode: ["CASH", "UPI", "CARD", "OTHER"],
       profile_status: ["ACTIVE", "INACTIVE"],
       rate_unit: ["PER_DAY", "PER_EVENT"],
+      subscription_payment_method: ["UPI", "BANK_TRANSFER", "CASH", "OTHER"],
       tenant_status: ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"],
     },
   },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
+import { requireTenantMember } from "@/lib/auth/guards";
 import { effectiveStatus } from "@/lib/booking-status";
 import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
 import { formatDate, todayIST } from "@/lib/dates";
@@ -15,6 +16,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
   const raw = (await searchParams).q;
   const q = (Array.isArray(raw) ? raw[0] : raw)?.trim().replace(/^#/, "") || "";
 
+  const { readOnly } = await requireTenantMember();
   const supabase = await createClient();
   let query = supabase
     .from("rental_orders")
@@ -43,12 +45,14 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-stone-900">Bookings</h1>
-        <Link
-          href="/bookings/new"
-          className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
-        >
-          New booking
-        </Link>
+        {!readOnly && (
+          <Link
+            href="/bookings/new"
+            className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
+          >
+            New booking
+          </Link>
+        )}
       </div>
 
       <form action="/bookings" role="search" className="flex gap-2">

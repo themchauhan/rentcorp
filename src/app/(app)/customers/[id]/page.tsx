@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { StatusBadge } from "@/components/status-badge";
+import { requireTenantMember } from "@/lib/auth/guards";
 import { formatDate } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { updateCustomer } from "../actions";
@@ -14,6 +15,7 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
+  const { readOnly } = await requireTenantMember();
   const supabase = await createClient();
   const { data: c } = await supabase
     .from("rental_customers")
@@ -36,12 +38,14 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
         </Link>
         <div className="mt-2 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-stone-900">{c.name}</h1>
-          <Link
-            href={`/bookings/new?customer=${c.id}`}
-            className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
-          >
-            New booking
-          </Link>
+          {!readOnly && (
+            <Link
+              href={`/bookings/new?customer=${c.id}`}
+              className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
+            >
+              New booking
+            </Link>
+          )}
         </div>
       </div>
 
@@ -73,20 +77,31 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
 
       <div>
         <h2 className="mb-3 text-lg font-semibold">Details</h2>
-        <CustomerForm
-          action={updateCustomer}
-          customerId={c.id}
-          submitLabel="Save changes"
-          initial={{
-            name: c.name,
-            mobile: c.mobile,
-            whatsappNumber:
-              c.whatsapp_number && c.whatsapp_number !== c.mobile ? c.whatsapp_number : "",
-            notOnWhatsapp: !c.whatsapp_number,
-            preferredChannel: c.preferred_channel,
-            address: c.address ?? "",
-          }}
-        />
+        {readOnly ? (
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <dt className="text-stone-500">Mobile</dt>
+            <dd>{c.mobile}</dd>
+            <dt className="text-stone-500">WhatsApp</dt>
+            <dd>{c.whatsapp_number ?? "Not on WhatsApp"}</dd>
+            <dt className="text-stone-500">Address</dt>
+            <dd>{c.address ?? "—"}</dd>
+          </dl>
+        ) : (
+          <CustomerForm
+            action={updateCustomer}
+            customerId={c.id}
+            submitLabel="Save changes"
+            initial={{
+              name: c.name,
+              mobile: c.mobile,
+              whatsappNumber:
+                c.whatsapp_number && c.whatsapp_number !== c.mobile ? c.whatsapp_number : "",
+              notOnWhatsapp: !c.whatsapp_number,
+              preferredChannel: c.preferred_channel,
+              address: c.address ?? "",
+            }}
+          />
+        )}
       </div>
     </section>
   );

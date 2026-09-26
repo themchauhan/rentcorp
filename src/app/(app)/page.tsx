@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SendPanel } from "@/components/send-panel";
 import { StatusBadge } from "@/components/status-badge";
-import { requireActiveTenant } from "@/lib/auth/guards";
+import { requireTenantMember } from "@/lib/auth/guards";
 import {
   buildBookingMessages,
   loadTemplates,
@@ -42,7 +42,7 @@ function lastMessagedLabel(openedAt: string | undefined, today: string) {
 }
 
 export default async function HomePage() {
-  const profile = await requireActiveTenant();
+  const profile = await requireTenantMember();
   const today = todayIST();
   const supabase = await createClient();
 
@@ -110,12 +110,14 @@ export default async function HomePage() {
           <h1 className="text-2xl font-bold text-stone-900">Home</h1>
           <p className="text-sm text-stone-600">{formatDate(today)}</p>
         </div>
-        <Link
-          href="/bookings/new"
-          className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
-        >
-          New booking
-        </Link>
+        {!profile.readOnly && (
+          <Link
+            href="/bookings/new"
+            className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 font-semibold text-white"
+          >
+            New booking
+          </Link>
+        )}
       </div>
 
       <dl className="grid grid-cols-3 gap-2 text-center" data-testid="home-summary">
@@ -198,7 +200,7 @@ export default async function HomePage() {
                       {last.text}
                     </p>
                   </Link>
-                  {prepared && msg && (
+                  {!profile.readOnly && prepared && msg && (
                     <details className="group">
                       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-center rounded-lg border border-brand-700 font-semibold text-brand-800 group-open:mb-3">
                         Send amount due

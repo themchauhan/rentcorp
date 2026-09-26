@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { requireActiveTenant } from "@/lib/auth/guards";
 import { emptyCustomerForm } from "@/lib/customers";
 import { createCustomer } from "../actions";
 import { CustomerForm } from "../customer-form";
 
 export const metadata: Metadata = { title: "Add customer" };
 
-export default function NewCustomerPage() {
+export default async function NewCustomerPage() {
+  await requireActiveTenant();
   return (
     <section className="max-w-lg">
       <Link href="/customers" className="text-sm font-medium text-brand-700">

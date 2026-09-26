@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignOutButton } from "@/components/sign-out-button";
-import { requireActiveTenant } from "@/lib/auth/guards";
+import { requireTenantMember } from "@/lib/auth/guards";
 
 export const metadata: Metadata = { title: "More" };
 
@@ -9,7 +9,7 @@ const linkClass =
   "flex min-h-12 items-center rounded-lg border border-stone-300 bg-white px-4 font-medium text-stone-700 hover:bg-stone-100";
 
 export default async function MorePage() {
-  const profile = await requireActiveTenant();
+  const profile = await requireTenantMember();
   return (
     <section>
       <h1 className="text-2xl font-bold text-stone-900">More</h1>

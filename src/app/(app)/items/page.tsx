@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireActiveTenant } from "@/lib/auth/guards";
+import { requireTenantMember } from "@/lib/auth/guards";
 import { RATE_UNIT_LABEL } from "@/lib/items";
 import { formatRupees } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
@@ -23,8 +23,9 @@ function hrefWith(current: Search, change: Partial<Search>): string {
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
-  const profile = await requireActiveTenant();
-  const isOwner = profile.role === "ADMIN";
+  const profile = await requireTenantMember();
+  // Owners edit the catalog; read-only businesses only view it.
+  const isOwner = profile.role === "ADMIN" && !profile.readOnly;
   const raw = await searchParams;
   const one = (v: string | string[] | undefined) =>
     (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
