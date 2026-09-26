@@ -34,7 +34,12 @@ export function formAlert(page: Page): Locator {
 export const IDS = {
   tenantB: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
   staffA: "a0000000-0000-4000-8000-000000000002",
+  itemA_plasticChair: "a1000000-0000-4000-8000-000000000001",
+  itemB_foldingChair: "b1000000-0000-4000-8000-000000000001",
 } as const;
+
+/** Unique suffix so parallel/repeated runs don't collide on names. */
+export const uniq = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
 
 /** A random, valid mobile that won't collide with seeds or earlier runs. */
 export function randomMobile(): string {

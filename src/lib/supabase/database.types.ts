@@ -106,6 +106,59 @@ export type Database = {
           },
         ];
       };
+      rental_items: {
+        Row: {
+          active: boolean;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          rate_paise: number;
+          rate_unit: Database["public"]["Enums"]["rate_unit"];
+          tenant_id: string;
+          total_quantity_owned: number;
+          unit_label: string;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          rate_paise: number;
+          rate_unit: Database["public"]["Enums"]["rate_unit"];
+          tenant_id?: string;
+          total_quantity_owned: number;
+          unit_label?: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          rate_paise?: number;
+          rate_unit?: Database["public"]["Enums"]["rate_unit"];
+          tenant_id?: string;
+          total_quantity_owned?: number;
+          unit_label?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rental_items_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           created_at: string;
@@ -166,6 +219,7 @@ export type Database = {
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "STAFF";
       profile_status: "ACTIVE" | "INACTIVE";
+      rate_unit: "PER_DAY" | "PER_EVENT";
       tenant_status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
     };
     CompositeTypes: {
@@ -280,6 +334,7 @@ export const Constants = {
     Enums: {
       app_role: ["SUPER_ADMIN", "ADMIN", "STAFF"],
       profile_status: ["ACTIVE", "INACTIVE"],
+      rate_unit: ["PER_DAY", "PER_EVENT"],
       tenant_status: ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"],
     },
   },

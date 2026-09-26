@@ -71,3 +71,18 @@ insert into public.audit_logs (tenant_id, user_id, action, target_type, target_i
 values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a0000000-0000-4000-8000-000000000001', 'seed.created', 'tenant', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'b0000000-0000-4000-8000-000000000001', 'seed.created', 'tenant', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+
+-- Item catalog (dummy). Rates in paise: 1000 = ₹10.
+insert into public.rental_items (id, tenant_id, name, category, unit_label, total_quantity_owned, rate_paise, rate_unit, active)
+values
+  ('a1000000-0000-4000-8000-000000000001', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Plastic chair', 'Furniture', 'piece', 500, 1000, 'PER_DAY', true),
+  ('a1000000-0000-4000-8000-000000000002', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Round table', 'Furniture', 'piece', 60, 15000, 'PER_DAY', true),
+  ('a1000000-0000-4000-8000-000000000003', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Shamiana 20x20 ft', 'Tents & Shamiana', 'piece', 8, 150000, 'PER_EVENT', true),
+  ('a1000000-0000-4000-8000-000000000004', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'LED string lights', 'Lighting', 'set', 40, 25000, 'PER_EVENT', true),
+  ('a1000000-0000-4000-8000-000000000005', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Generator 15 kVA', 'Generator', 'piece', 2, 200000, 'PER_DAY', true),
+  ('a1000000-0000-4000-8000-000000000006', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Steel plate', 'Utensils', 'piece', 1000, 300, 'PER_EVENT', true),
+  ('a1000000-0000-4000-8000-000000000007', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Sofa set', 'Furniture', 'set', 10, 80000, 'PER_DAY', true),
+  ('a1000000-0000-4000-8000-000000000008', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Old wooden stage', 'Decoration', 'piece', 1, 100000, 'PER_EVENT', false),
+  ('b1000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Folding chair', 'Furniture', 'piece', 300, 1200, 'PER_DAY', true),
+  ('b1000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Wedding tent 40x60 ft', 'Tents & Shamiana', 'piece', 2, 800000, 'PER_EVENT', true),
+  ('b1000000-0000-4000-8000-000000000003', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'DJ speaker', 'Sound', 'pair', 4, 300000, 'PER_EVENT', true);

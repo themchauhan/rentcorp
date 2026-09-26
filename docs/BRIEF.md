@@ -73,7 +73,7 @@ passwords are reset by the owner (staff) or super admin (owners).
 | `tenants` | id, name, phone, email, status, plan, trial_ends_at, subscription_ends_at |
 | `profiles` | id (Auth user), tenant_id, name, mobile (login id), role (ADMIN/STAFF), status |
 | `platform_admins` | user_id (Auth user), name — SUPER_ADMIN accounts, not tied to a tenant |
-| `rental_items` | id, tenant_id, name, category, unit_label, total_quantity_owned, rate_amount, rate_unit (`PER_DAY`\|`PER_EVENT`), active |
+| `rental_items` | id, tenant_id, name, category, unit_label, total_quantity_owned, rate_paise (integer paise), rate_unit (`PER_DAY`\|`PER_EVENT`), active |
 | `rental_customers` | id, tenant_id, name, mobile, whatsapp_number (nullable, defaults to mobile), preferred_channel (`WHATSAPP`\|`SMS`), address |
 | `rental_orders` | id, tenant_id, customer_id, order_date, event_start_date, expected_return_date, status (`ACTIVE`\|`PARTIALLY_RETURNED`\|`RETURNED`\|`OVERDUE`\|`CANCELLED`), security_deposit_amount (nullable), discount_type (`NONE`\|`FLAT`\|`PERCENT`), discount_value, discount_reason (nullable), discount_updated_by, discount_updated_at, notes, created_by |
 | `rental_order_items` | id, rental_order_id, rental_item_id, quantity, rate_amount_snapshot, rate_unit_snapshot |
