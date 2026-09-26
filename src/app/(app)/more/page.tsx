@@ -19,6 +19,9 @@ export default async function MorePage() {
       <div className="mt-6 space-y-3">
         {profile.role === "ADMIN" && (
           <>
+            <Link href="/reports" className={linkClass}>
+              Reports
+            </Link>
             <Link href="/team" className={linkClass}>
               Team
             </Link>
