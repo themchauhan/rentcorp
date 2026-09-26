@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
+import { effectiveStatus } from "@/lib/booking-status";
 import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
 import { formatDate, todayIST } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
@@ -78,7 +79,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
                   <p className="min-w-0 truncate font-semibold">
                     #{o.booking_number} · {o.customer.name}
                   </p>
-                  <StatusBadge status={o.status} />
+                  <StatusBadge status={effectiveStatus(o.status, o.expected_return_date, today)} />
                 </div>
                 <div className="mt-0.5 flex items-center justify-between gap-3 text-sm text-stone-600">
                   <span>

@@ -42,7 +42,15 @@ test("pages never scroll sideways", async ({ page }) => {
     expect(overflow, path).toBeLessThanOrEqual(0);
   }
   await login(page, USERS.adminA);
-  for (const path of ["/", "/more", "/settings"]) {
+  for (const path of [
+    "/",
+    "/more",
+    "/settings",
+    "/bookings",
+    "/bookings/new",
+    "/items",
+    "/customers",
+  ]) {
     await page.goto(path);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

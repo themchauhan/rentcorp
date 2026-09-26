@@ -6,6 +6,7 @@ import { SendPanel } from "@/components/send-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { FormMessage } from "@/components/ui/form";
 import { requireActiveTenant } from "@/lib/auth/guards";
+import { daysOverdue, effectiveStatus } from "@/lib/booking-status";
 import { prepareBookingMessages } from "@/lib/booking-messages";
 import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
 import { formatDate, formatTime, todayIST } from "@/lib/dates";
@@ -73,7 +74,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
         </Link>
         <div className="mt-2 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-stone-900">Booking #{order.booking_number}</h1>
-          <StatusBadge status={order.status} />
+          <StatusBadge status={effectiveStatus(order.status, order.expected_return_date, today)} />
         </div>
       </div>
 
@@ -103,7 +104,9 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
             </p>
             <p className="text-sm text-stone-600" data-testid="days-so-far">
               Day {due.daysSoFar} of {estimate.days} planned
-              {due.daysSoFar > estimate.days ? " · past the return date" : ""}
+              {daysOverdue(order.expected_return_date, today) > 0
+                ? ` · ${daysOverdue(order.expected_return_date, today)} day${daysOverdue(order.expected_return_date, today) === 1 ? "" : "s"} overdue`
+                : ""}
             </p>
             <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
               <dt>Charges so far</dt>
