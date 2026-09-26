@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { SendPanel } from "@/components/send-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { FormMessage } from "@/components/ui/form";
+import { requireActiveTenant } from "@/lib/auth/guards";
+import { prepareBookingMessages } from "@/lib/booking-messages";
 import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
 import { formatDate, formatTime, todayIST } from "@/lib/dates";
 import { RATE_UNIT_LABEL } from "@/lib/items";
@@ -18,6 +21,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   const created = (await searchParams).created === "1";
   if (!z.uuid().safeParse(id).success) notFound();
 
+  const profile = await requireActiveTenant();
   const supabase = await createClient();
   const { data: order } = await supabase
     .from("rental_orders")
@@ -41,6 +45,25 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   const today = todayIST();
   const due = amountDueForStoredBooking({ ...order, lines }, today);
   const customer = order.customer;
+
+  const canSendAmountDue = order.status !== "CANCELLED" && due.started;
+  const prepared = await prepareBookingMessages(supabase, order.id, profile.tenant.name, [
+    "BOOKING_CONFIRMATION",
+    "AMOUNT_DUE",
+  ]);
+  const [confirmation, amountDueMessage] = prepared?.messages ?? [];
+
+  const { data: log } = await supabase
+    .from("message_log")
+    .select("id, message_type, channel, opened_at, sent_by")
+    .eq("rental_order_id", order.id)
+    .order("opened_at", { ascending: false })
+    .limit(20);
+  const senderIds = [...new Set((log ?? []).map((l) => l.sent_by).filter(Boolean))] as string[];
+  const { data: senders } = senderIds.length
+    ? await supabase.from("profiles").select("id, name").in("id", senderIds)
+    : { data: [] };
+  const senderName = new Map((senders ?? []).map((p) => [p.id, p.name]));
 
   return (
     <section className="max-w-2xl space-y-6">
@@ -105,6 +128,43 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
           </>
         )}
       </div>
+
+      {prepared && confirmation && amountDueMessage && (
+        <div className="space-y-3">
+          <details open={created} className="group rounded-2xl" data-testid="send-booking-details">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between rounded-2xl border border-stone-200 bg-white px-4 font-semibold group-open:hidden">
+              Send booking details <span aria-hidden="true">›</span>
+            </summary>
+            <SendPanel
+              orderId={order.id}
+              type="BOOKING_CONFIRMATION"
+              title="Send booking details"
+              whatsappText={confirmation.whatsapp}
+              smsText={confirmation.sms}
+              mobile={prepared.recipient.mobile}
+              whatsappNumber={prepared.recipient.whatsappNumber}
+              preferredChannel={prepared.recipient.preferredChannel}
+            />
+          </details>
+          {canSendAmountDue && (
+            <details open={!created} className="group rounded-2xl" data-testid="send-amount-due">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between rounded-2xl border border-stone-200 bg-white px-4 font-semibold group-open:hidden">
+                Send amount due <span aria-hidden="true">›</span>
+              </summary>
+              <SendPanel
+                orderId={order.id}
+                type="AMOUNT_DUE"
+                title="Send amount due"
+                whatsappText={amountDueMessage.whatsapp}
+                smsText={amountDueMessage.sms}
+                mobile={prepared.recipient.mobile}
+                whatsappNumber={prepared.recipient.whatsappNumber}
+                preferredChannel={prepared.recipient.preferredChannel}
+              />
+            </details>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-stone-200 bg-white p-4">
@@ -212,6 +272,50 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
           )}
         </div>
       )}
+      <div className="rounded-2xl border border-stone-200 bg-white p-4" data-testid="message-log">
+        <h2 className="mb-2 text-lg font-semibold">Messages</h2>
+        {log?.length ? (
+          <ul className="divide-y divide-stone-100 text-sm">
+            {log.map((m) => (
+              <li key={m.id} className="flex items-center justify-between gap-3 py-2">
+                <span>
+                  {MESSAGE_LABEL[m.message_type]} · {CHANNEL_LABEL[m.channel]}
+                  <span className="block text-xs text-stone-500">
+                    {m.sent_by ? (senderName.get(m.sent_by) ?? "Former staff") : ""}
+                  </span>
+                </span>
+                <time className="shrink-0 text-xs text-stone-500" dateTime={m.opened_at}>
+                  {new Date(m.opened_at).toLocaleString("en-IN", {
+                    timeZone: "Asia/Kolkata",
+                    day: "numeric",
+                    month: "short",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </time>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-stone-500">No messages sent yet.</p>
+        )}
+        <p className="mt-2 text-xs text-stone-500">
+          Shows when a message was opened in WhatsApp or SMS on your phone. The app can’t confirm it
+          was delivered.
+        </p>
+      </div>
     </section>
   );
 }
+
+const MESSAGE_LABEL = {
+  BOOKING_CONFIRMATION: "Booking details",
+  AMOUNT_DUE: "Amount due",
+  RETURN_CONFIRMATION: "Return confirmation",
+} as const;
+
+const CHANNEL_LABEL = {
+  WHATSAPP: "opened in WhatsApp",
+  SMS: "opened in SMS",
+  COPY: "copied",
+} as const;

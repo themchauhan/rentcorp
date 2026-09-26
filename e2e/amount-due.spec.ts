@@ -13,7 +13,7 @@ test("a running booking shows today's amount due", async ({ page }) => {
   const day = Number(/Day (\d+)/.exec(daysText ?? "")?.[1]);
   expect(day).toBeGreaterThanOrEqual(1);
   await expect(page.getByTestId("amount-due")).toHaveText(rupees(1000 * day + 1500));
-  await expect(page.getByText("Charges so far")).toBeVisible();
+  await expect(page.getByTestId("amount-due-card").getByText("Charges so far")).toBeVisible();
 
   // The list shows the same figure.
   await page.goto("/bookings?q=1");

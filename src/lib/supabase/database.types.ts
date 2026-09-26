@@ -44,6 +44,92 @@ export type Database = {
           },
         ];
       };
+      message_log: {
+        Row: {
+          amount_due_snapshot_paise: number | null;
+          body_snapshot: string;
+          channel: Database["public"]["Enums"]["message_log_channel"];
+          id: number;
+          message_type: Database["public"]["Enums"]["message_type"];
+          opened_at: string;
+          rental_order_id: string;
+          sent_by: string | null;
+          tenant_id: string;
+          to_number: string | null;
+        };
+        Insert: {
+          amount_due_snapshot_paise?: number | null;
+          body_snapshot: string;
+          channel: Database["public"]["Enums"]["message_log_channel"];
+          id?: never;
+          message_type: Database["public"]["Enums"]["message_type"];
+          opened_at?: string;
+          rental_order_id: string;
+          sent_by?: string | null;
+          tenant_id?: string;
+          to_number?: string | null;
+        };
+        Update: {
+          amount_due_snapshot_paise?: number | null;
+          body_snapshot?: string;
+          channel?: Database["public"]["Enums"]["message_log_channel"];
+          id?: never;
+          message_type?: Database["public"]["Enums"]["message_type"];
+          opened_at?: string;
+          rental_order_id?: string;
+          sent_by?: string | null;
+          tenant_id?: string;
+          to_number?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_log_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_log_tenant_id_rental_order_id_fkey";
+            columns: ["tenant_id", "rental_order_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_orders";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      message_templates: {
+        Row: {
+          body: string;
+          message_type: Database["public"]["Enums"]["message_type"];
+          tenant_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          body: string;
+          message_type: Database["public"]["Enums"]["message_type"];
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          body?: string;
+          message_type?: Database["public"]["Enums"]["message_type"];
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       platform_admins: {
         Row: {
           created_at: string;
@@ -432,6 +518,8 @@ export type Database = {
       booking_status: "ACTIVE" | "PARTIALLY_RETURNED" | "RETURNED" | "OVERDUE" | "CANCELLED";
       discount_type: "NONE" | "FLAT" | "PERCENT";
       message_channel: "WHATSAPP" | "SMS";
+      message_log_channel: "WHATSAPP" | "SMS" | "COPY";
+      message_type: "BOOKING_CONFIRMATION" | "AMOUNT_DUE" | "RETURN_CONFIRMATION";
       profile_status: "ACTIVE" | "INACTIVE";
       rate_unit: "PER_DAY" | "PER_EVENT";
       tenant_status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
@@ -550,6 +638,8 @@ export const Constants = {
       booking_status: ["ACTIVE", "PARTIALLY_RETURNED", "RETURNED", "OVERDUE", "CANCELLED"],
       discount_type: ["NONE", "FLAT", "PERCENT"],
       message_channel: ["WHATSAPP", "SMS"],
+      message_log_channel: ["WHATSAPP", "SMS", "COPY"],
+      message_type: ["BOOKING_CONFIRMATION", "AMOUNT_DUE", "RETURN_CONFIRMATION"],
       profile_status: ["ACTIVE", "INACTIVE"],
       rate_unit: ["PER_DAY", "PER_EVENT"],
       tenant_status: ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"],
