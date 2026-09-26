@@ -73,6 +73,18 @@ export default async function HomePage() {
     .filter((o) => o.event_start_date > today)
     .sort((a, b) => a.event_start_date.localeCompare(b.event_start_date));
 
+  // Everything back but not yet paid up.
+  const { data: returnedData } = await supabase
+    .from("rental_orders")
+    .select(ORDER_FOR_MESSAGES)
+    .eq("status", "RETURNED")
+    .is("closed_at", null)
+    .order("expected_return_date", { ascending: false })
+    .limit(100);
+  const awaitingPayment = ((returnedData ?? []) as Row[])
+    .map((o) => ({ order: o, due: amountDueForStoredBooking(o, today) }))
+    .filter((r) => r.due.amountDue > 0);
+
   const templates = await loadTemplates(supabase);
   const { data: log } = orders.length
     ? await supabase
@@ -209,6 +221,30 @@ export default async function HomePage() {
           </ul>
         )}
       </div>
+
+      {awaitingPayment.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-semibold">Returned, payment pending</h2>
+          <ul className="divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
+            {awaitingPayment.map(({ order: o, due }) => (
+              <li key={o.id} data-testid="awaiting-payment-row">
+                <Link
+                  href={`/bookings/${o.id}`}
+                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-stone-50"
+                >
+                  <span className="min-w-0 truncate font-medium">
+                    {o.customer?.name} <span className="text-stone-500">#{o.booking_number}</span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block font-bold">{formatRupees(due.amountDue)}</span>
+                    <span className="text-xs text-stone-500">to collect</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {upcoming.length > 0 && (
         <div>

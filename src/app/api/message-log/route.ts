@@ -40,7 +40,9 @@ export async function POST(request: Request) {
     .select(
       `status, event_start_date, expected_return_date, discount_type, discount_value,
        customer:rental_customers (mobile, whatsapp_number),
-       lines:rental_order_items (quantity, rate_paise_snapshot, rate_unit_snapshot)`,
+       lines:rental_order_items (id, quantity, rate_paise_snapshot, rate_unit_snapshot),
+       returns:rental_returns (rental_order_item_id, quantity_returned, returned_on),
+       payments:rental_payments (amount_paise)`,
     )
     .eq("id", orderId)
     .maybeSingle();

@@ -32,7 +32,9 @@ export const ORDER_FOR_MESSAGES = `id, booking_number, status, event_start_date,
   expected_return_date, security_deposit_paise, discount_type, discount_value,
   customer:rental_customers (name, mobile, whatsapp_number, preferred_channel),
   lines:rental_order_items (id, quantity, item_name_snapshot, unit_label_snapshot,
-    rate_paise_snapshot, rate_unit_snapshot)` as const;
+    rate_paise_snapshot, rate_unit_snapshot),
+  returns:rental_returns (rental_order_item_id, quantity_returned, returned_on),
+  payments:rental_payments (amount_paise)` as const;
 
 export type OrderForMessages = {
   booking_number: number;
@@ -57,6 +59,8 @@ export type OrderForMessages = {
     rate_paise_snapshot: number;
     rate_unit_snapshot: "PER_DAY" | "PER_EVENT";
   }[];
+  returns: { rental_order_item_id: string; quantity_returned: number; returned_on: string }[];
+  payments: { amount_paise: number }[];
 };
 
 /** Builds messages for an already-loaded booking (no I/O). */

@@ -75,10 +75,10 @@ passwords are reset by the owner (staff) or super admin (owners).
 | `platform_admins` | user_id (Auth user), name — SUPER_ADMIN accounts, not tied to a tenant |
 | `rental_items` | id, tenant_id, name, category, unit_label, total_quantity_owned, rate_paise (integer paise), rate_unit (`PER_DAY`\|`PER_EVENT`), active |
 | `rental_customers` | id, tenant_id, name, mobile, whatsapp_number (nullable = not on WhatsApp; defaults to mobile), preferred_channel (`WHATSAPP`\|`SMS`), address |
-| `rental_orders` | id, tenant_id, customer_id, order_date, event_start_date, expected_return_date, status (`ACTIVE`\|`PARTIALLY_RETURNED`\|`RETURNED`\|`OVERDUE`\|`CANCELLED`), booking_number (per business), event_start_time (optional), security_deposit_paise (nullable), discount_type (`NONE`\|`FLAT`\|`PERCENT`), discount_value, discount_reason (nullable), discount_updated_by, discount_updated_at, notes, created_by |
+| `rental_orders` | id, tenant_id, customer_id, order_date, event_start_date, expected_return_date, status (`ACTIVE`\|`PARTIALLY_RETURNED`\|`RETURNED`\|`OVERDUE`\|`CANCELLED`), closed_at/by, cancelled_at/by, cancel_reason, booking_number (per business), event_start_time (optional), security_deposit_paise (nullable), discount_type (`NONE`\|`FLAT`\|`PERCENT`), discount_value, discount_reason (nullable), discount_updated_by, discount_updated_at, notes, created_by |
 | `rental_order_items` | id, tenant_id, rental_order_id, rental_item_id, quantity, item_name_snapshot, unit_label_snapshot, rate_paise_snapshot, rate_unit_snapshot |
-| `rental_returns` | id, rental_order_item_id, quantity_returned, returned_at, condition_notes |
-| `rental_payments` | id, rental_order_id, amount, mode (`CASH`\|`UPI`\|`CARD`\|`OTHER`), received_by, received_at, note |
+| `rental_returns` | id, tenant_id, rental_order_id, rental_order_item_id, quantity_returned, returned_on (IST date, may be backdated), condition_notes, recorded_by, recorded_at |
+| `rental_payments` | id, tenant_id, rental_order_id, kind (`PAYMENT`\|`REVERSAL`), amount_paise (negative for reversals), mode (`CASH`\|`UPI`\|`CARD`\|`OTHER`), reverses_payment_id, received_by, received_at, note |
 | `message_log` | id, tenant_id, rental_order_id, message_type (`BOOKING_CONFIRMATION`\|`AMOUNT_DUE`\|`RETURN_CONFIRMATION`), channel (`WHATSAPP`\|`SMS`\|`COPY`), to_number, body_snapshot, amount_due_snapshot_paise, sent_by, opened_at |
 | `message_templates` | tenant_id, message_type, body (owner's custom wording; none = default) |
 | `audit_logs` | id, tenant_id, user_id, action, target_type, target_id, metadata, created_at |

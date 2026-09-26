@@ -172,3 +172,26 @@ describe("consistency with the booking-form estimate", () => {
     expect(due.net).toBe(planned.total);
   });
 });
+
+describe("matches the SQL final bill (supabase/tests/70_returns_payments.test.sql)", () => {
+  it("4 chairs back after 2 days, 6 chairs + shamiana after 4 days → ₹1,820", () => {
+    const b = booking({
+      lines: [
+        chairs({
+          quantity: 10,
+          returns: [
+            { quantity: 4, returnedOn: addDays(START, 1) },
+            { quantity: 6, returnedOn: addDays(START, 3) },
+          ],
+        }),
+        { ...shamiana, returns: [{ quantity: 1, returnedOn: addDays(START, 3) }] },
+      ],
+    });
+    expect(computeAmountDue(b, addDays(START, 3)).gross).toBe(182_000);
+    const discounted = computeAmountDue(
+      { ...b, discount: { type: "PERCENT", value: 1000 }, payments: [{ amountPaise: 100_000 }] },
+      addDays(START, 3),
+    );
+    expect(discounted.balance).toBe(63_800);
+  });
+});

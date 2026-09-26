@@ -9,8 +9,16 @@ export type SnapshotLine = {
   rate_unit_snapshot: RateUnit;
 };
 
+export type StoredReturn = {
+  rental_order_item_id: string;
+  quantity_returned: number;
+  returned_on: string;
+};
+
 type StoredBooking = {
   status: "ACTIVE" | "PARTIALLY_RETURNED" | "RETURNED" | "OVERDUE" | "CANCELLED";
+  returns?: StoredReturn[];
+  payments?: { amount_paise: number }[];
   event_start_date: string;
   expected_return_date: string;
   discount_type: DiscountType;
@@ -32,10 +40,7 @@ export function estimateStoredBooking(order: Omit<StoredBooking, "status">) {
   );
 }
 
-/**
- * Amount due for a stored booking as of an IST date. Returns and payments
- * are recorded from Phase 7; until then both are empty.
- */
+/** Amount due for a stored booking (with its returns and payments) as of an IST date. */
 export function amountDueForStoredBooking(order: StoredBooking, asOf: string): AmountDue {
   return computeAmountDue(
     {
@@ -47,9 +52,11 @@ export function amountDueForStoredBooking(order: StoredBooking, asOf: string): A
         quantity: l.quantity,
         ratePaise: l.rate_paise_snapshot,
         rateUnit: l.rate_unit_snapshot,
-        returns: [],
+        returns: (order.returns ?? [])
+          .filter((r) => r.rental_order_item_id === l.id)
+          .map((r) => ({ quantity: r.quantity_returned, returnedOn: r.returned_on })),
       })),
-      payments: [],
+      payments: (order.payments ?? []).map((p) => ({ amountPaise: p.amount_paise })),
     },
     asOf,
   );

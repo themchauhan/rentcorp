@@ -21,7 +21,9 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
     .select(
       `id, booking_number, status, event_start_date, expected_return_date, discount_type, discount_value,
        customer:rental_customers!inner (name, mobile),
-       lines:rental_order_items (quantity, rate_paise_snapshot, rate_unit_snapshot)`,
+       lines:rental_order_items (id, quantity, rate_paise_snapshot, rate_unit_snapshot),
+       returns:rental_returns (rental_order_item_id, quantity_returned, returned_on),
+       payments:rental_payments (amount_paise)`,
     )
     .order("created_at", { ascending: false })
     .limit(100);

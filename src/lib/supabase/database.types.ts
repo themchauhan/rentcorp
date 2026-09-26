@@ -356,6 +356,11 @@ export type Database = {
       rental_orders: {
         Row: {
           booking_number: number;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
           created_at: string;
           created_by: string | null;
           customer_id: string;
@@ -377,6 +382,11 @@ export type Database = {
         };
         Insert: {
           booking_number: number;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
           created_at?: string;
           created_by?: string | null;
           customer_id: string;
@@ -398,6 +408,11 @@ export type Database = {
         };
         Update: {
           booking_number?: number;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
           created_at?: string;
           created_by?: string | null;
           customer_id?: string;
@@ -431,6 +446,125 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      rental_payments: {
+        Row: {
+          amount_paise: number;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          mode: Database["public"]["Enums"]["payment_mode"];
+          note: string | null;
+          received_at: string;
+          received_by: string | null;
+          rental_order_id: string;
+          reverses_payment_id: string | null;
+          tenant_id: string;
+        };
+        Insert: {
+          amount_paise: number;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          mode: Database["public"]["Enums"]["payment_mode"];
+          note?: string | null;
+          received_at?: string;
+          received_by?: string | null;
+          rental_order_id: string;
+          reverses_payment_id?: string | null;
+          tenant_id?: string;
+        };
+        Update: {
+          amount_paise?: number;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          mode?: Database["public"]["Enums"]["payment_mode"];
+          note?: string | null;
+          received_at?: string;
+          received_by?: string | null;
+          rental_order_id?: string;
+          reverses_payment_id?: string | null;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rental_payments_reverses_payment_id_fkey";
+            columns: ["reverses_payment_id"];
+            isOneToOne: true;
+            referencedRelation: "rental_payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rental_payments_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rental_payments_tenant_id_rental_order_id_fkey";
+            columns: ["tenant_id", "rental_order_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_orders";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      rental_returns: {
+        Row: {
+          condition_notes: string | null;
+          id: string;
+          quantity_returned: number;
+          recorded_at: string;
+          recorded_by: string | null;
+          rental_order_id: string;
+          rental_order_item_id: string;
+          returned_on: string;
+          tenant_id: string;
+        };
+        Insert: {
+          condition_notes?: string | null;
+          id?: string;
+          quantity_returned: number;
+          recorded_at?: string;
+          recorded_by?: string | null;
+          rental_order_id: string;
+          rental_order_item_id: string;
+          returned_on: string;
+          tenant_id?: string;
+        };
+        Update: {
+          condition_notes?: string | null;
+          id?: string;
+          quantity_returned?: number;
+          recorded_at?: string;
+          recorded_by?: string | null;
+          rental_order_id?: string;
+          rental_order_item_id?: string;
+          returned_on?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "rental_returns_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "rental_returns_tenant_id_rental_order_id_fkey";
+            columns: ["tenant_id", "rental_order_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_orders";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "rental_returns_tenant_id_rental_order_item_id_fkey";
+            columns: ["tenant_id", "rental_order_item_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_order_items";
+            referencedColumns: ["tenant_id", "id"];
           },
         ];
       };
@@ -478,6 +612,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      cancel_booking: { Args: { p_order_id: string; p_reason: string }; Returns: undefined };
+      close_booking: { Args: { p_order_id: string }; Returns: undefined };
       create_booking: {
         Args: {
           p_customer_id: string;
@@ -512,6 +648,10 @@ export type Database = {
         };
         Returns: string;
       };
+      record_returns: {
+        Args: { p_items: Json; p_notes?: string; p_order_id: string; p_returned_on: string };
+        Returns: number;
+      };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "STAFF";
@@ -520,6 +660,8 @@ export type Database = {
       message_channel: "WHATSAPP" | "SMS";
       message_log_channel: "WHATSAPP" | "SMS" | "COPY";
       message_type: "BOOKING_CONFIRMATION" | "AMOUNT_DUE" | "RETURN_CONFIRMATION";
+      payment_kind: "PAYMENT" | "REVERSAL";
+      payment_mode: "CASH" | "UPI" | "CARD" | "OTHER";
       profile_status: "ACTIVE" | "INACTIVE";
       rate_unit: "PER_DAY" | "PER_EVENT";
       tenant_status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
@@ -640,6 +782,8 @@ export const Constants = {
       message_channel: ["WHATSAPP", "SMS"],
       message_log_channel: ["WHATSAPP", "SMS", "COPY"],
       message_type: ["BOOKING_CONFIRMATION", "AMOUNT_DUE", "RETURN_CONFIRMATION"],
+      payment_kind: ["PAYMENT", "REVERSAL"],
+      payment_mode: ["CASH", "UPI", "CARD", "OTHER"],
       profile_status: ["ACTIVE", "INACTIVE"],
       rate_unit: ["PER_DAY", "PER_EVENT"],
       tenant_status: ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"],
