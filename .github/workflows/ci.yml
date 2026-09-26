@@ -35,12 +35,17 @@ jobs:
         run: npm run db:backup-test
       - name: Write .env.local from local Supabase
         run: |
-          eval "$(npx supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=')"
+          # Keys of the throwaway Supabase instance started above (not production).
+          eval "$(npx supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY|SECRET_KEY)=')"
+          echo "::add-mask::$SECRET_KEY"
           {
             echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
             echo "NEXT_PUBLIC_APP_URL=http://localhost:3100"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
           } > .env.local
+          # Lets the bundle scan look for the literal secret value.
+          echo "SUPABASE_SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
 
       - run: npm run build
       - name: No secrets in client bundle
