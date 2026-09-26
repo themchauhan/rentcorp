@@ -14,7 +14,8 @@ until every item below is checked.
 - [ ] Database backup/recovery procedure documented and tested (a
       real restore, not just a backup)
 - [ ] Secure session settings reviewed (cookie flags, session length)
-- [ ] Admin MFA confirmed working for all admin accounts before pilot
+- [ ] Decide on 2FA/MFA for owners and super admin (deferred from
+      Phase 1c); if adopted, confirm it works for all admin accounts
 - [ ] Send on WhatsApp / Send SMS verified on the pilot's actual
       phones (Android and iOS if both are used)
 - [ ] Data retention/deletion policy written

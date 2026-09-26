@@ -18,9 +18,14 @@ export default async function MorePage() {
       </p>
       <div className="mt-6 space-y-3">
         {profile.role === "ADMIN" && (
-          <Link href="/settings" className={linkClass}>
-            Business settings
-          </Link>
+          <>
+            <Link href="/team" className={linkClass}>
+              Team
+            </Link>
+            <Link href="/settings" className={linkClass}>
+              Business settings
+            </Link>
+          </>
         )}
         <Link href="/more/password" className={linkClass}>
           Change password

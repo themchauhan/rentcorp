@@ -90,7 +90,7 @@ use the password `Demo@1234`:
 
 | Mobile       | Account                          |
 | ------------ | -------------------------------- |
-| `9000000001` | Super admin (platform dashboard) |
+| `9000000001` | Super admin (Businesses screen)  |
 | `9000000101` | Owner (admin), Demo Tent House A |
 | `9000000102` | Staff, Demo Tent House A         |
 | `9000000103` | Deactivated staff (can't log in) |
@@ -99,6 +99,21 @@ use the password `Demo@1234`:
 
 The full list is at the top of `supabase/seed.sql`. `npm run db:reset`
 restores them if you change anything.
+
+### Accounts
+
+- **First super admin** (no web signup exists): run
+  `node --env-file=.env.local scripts/create-super-admin.mjs --mobile 98765 43210 --name "Your Name"`
+  and enter a password twice. For a hosted project, point the two env
+  vars at that project instead.
+- **Super admin** → Businesses → _New business_ creates the business and
+  its owner, and shows the owner's temporary password once.
+- **Owner** → More → Team adds staff (temporary password shown once),
+  resets their passwords, and deactivates/reactivates them.
+- Anyone logging in with a temporary password must choose their own
+  password first.
+- `SUPABASE_SECRET_KEY` must be set in `.env.local` for these screens
+  (copy `SECRET_KEY` from `npx supabase status`).
 
 ## Scripts
 

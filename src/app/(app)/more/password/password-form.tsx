@@ -2,17 +2,25 @@
 
 import { useActionState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/ui/form";
-import { changePassword, type PasswordState } from "./actions";
+import type { PasswordState } from "@/lib/auth/change-password";
 
-export function PasswordForm() {
-  const [state, formAction, pending] = useActionState<PasswordState, FormData>(changePassword, {});
+export function PasswordForm({
+  action,
+  currentLabel = "Current password",
+  submitLabel = "Change password",
+}: {
+  action: (prev: PasswordState, formData: FormData) => Promise<PasswordState>;
+  currentLabel?: string;
+  submitLabel?: string;
+}) {
+  const [state, formAction, pending] = useActionState<PasswordState, FormData>(action, {});
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
       {state.error && <FormMessage tone="error">{state.error}</FormMessage>}
       {state.success && <FormMessage tone="success">{state.success}</FormMessage>}
       <Field
-        label="Current password"
+        label={currentLabel}
         name="current"
         type="password"
         autoComplete="current-password"
@@ -35,7 +43,7 @@ export function PasswordForm() {
         error={state.fieldErrors?.confirm}
         required
       />
-      <SubmitButton pending={pending}>Change password</SubmitButton>
+      <SubmitButton pending={pending}>{submitLabel}</SubmitButton>
     </form>
   );
 }

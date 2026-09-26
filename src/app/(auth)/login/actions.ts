@@ -52,6 +52,12 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
         mobile: rawMobile,
       };
     }
+    if (error?.code === "user_banned") {
+      return {
+        error: "This account has been deactivated. Contact your business owner.",
+        mobile: rawMobile,
+      };
+    }
     if (error && error.code !== "invalid_credentials") {
       console.error("Login failed unexpectedly:", error.code, error.message);
       return { error: "Couldn't log in right now. Please try again.", mobile: rawMobile };
@@ -75,6 +81,6 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
 
   // Blocked businesses (suspended/expired) may still sign in; the tenant
   // guard shows them the account-inactive page.
-  await logAudit("auth.login", "user", profile.userId, {}, supabase);
+  await logAudit("auth.login", "user", profile.userId, {}, { client: supabase });
   redirect(homePathForRole(profile.role));
 }

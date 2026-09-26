@@ -67,6 +67,7 @@ export type Database = {
           created_at: string;
           id: string;
           mobile: string;
+          must_change_password: boolean;
           name: string;
           role: Database["public"]["Enums"]["app_role"];
           status: Database["public"]["Enums"]["profile_status"];
@@ -77,6 +78,7 @@ export type Database = {
           created_at?: string;
           id: string;
           mobile: string;
+          must_change_password?: boolean;
           name: string;
           role: Database["public"]["Enums"]["app_role"];
           status?: Database["public"]["Enums"]["profile_status"];
@@ -87,6 +89,7 @@ export type Database = {
           created_at?: string;
           id?: string;
           mobile?: string;
+          must_change_password?: boolean;
           name?: string;
           role?: Database["public"]["Enums"]["app_role"];
           status?: Database["public"]["Enums"]["profile_status"];
@@ -147,7 +150,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      mark_password_changed: { Args: Record<PropertyKey, never>; Returns: undefined };
+      provision_tenant_with_owner: {
+        Args: {
+          p_owner_id: string;
+          p_owner_mobile: string;
+          p_owner_name: string;
+          p_tenant_name: string;
+          p_tenant_phone?: string;
+          p_trial_days?: number;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "STAFF";

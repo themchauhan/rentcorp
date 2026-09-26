@@ -70,7 +70,7 @@ test.describe("roles reach their own routes", () => {
   test("SUPER_ADMIN lands on the platform dashboard and not tenant screens", async ({ page }) => {
     await login(page, USERS.superAdmin);
     await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.getByRole("heading", { name: "Platform dashboard" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Businesses" })).toBeVisible();
 
     await page.goto("/bookings");
     await expect(page).toHaveURL(/\/admin$/);

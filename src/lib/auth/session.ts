@@ -28,6 +28,8 @@ export type SessionProfile =
       name: string;
       role: "ADMIN" | "STAFF";
       status: "ACTIVE" | "INACTIVE";
+      /** Set after an admin creates the account or resets its password. */
+      mustChangePassword: boolean;
       tenantId: string;
       /** Null when the profile is INACTIVE (RLS hides the tenant). */
       tenant: SessionTenant | null;
@@ -64,7 +66,7 @@ export async function loadProfile(
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "name, role, status, tenant_id, tenant:tenants (id, name, status, trial_ends_at, subscription_ends_at)",
+      "name, role, status, must_change_password, tenant_id, tenant:tenants (id, name, status, trial_ends_at, subscription_ends_at)",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -79,6 +81,7 @@ export async function loadProfile(
     name: profile.name,
     role: profile.role,
     status: profile.status,
+    mustChangePassword: profile.must_change_password,
     tenantId: profile.tenant_id,
     tenant: (profile.tenant as SessionTenant | null) ?? null,
   };
