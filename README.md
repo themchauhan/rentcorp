@@ -7,6 +7,9 @@ one-tap WhatsApp/SMS messages sent from the owner's own phone.
 - Product brief: [`docs/BRIEF.md`](docs/BRIEF.md)
 - Project rules: [`CLAUDE.md`](CLAUDE.md)
 - Build phases: [`docs/phases/`](docs/phases)
+- Security review: [`docs/security/`](docs/security) · Backups:
+  [`docs/operations/backup-restore.md`](docs/operations/backup-restore.md) ·
+  Data retention (draft): [`docs/policies/data-retention.md`](docs/policies/data-retention.md)
 
 ## Stack
 
@@ -132,6 +135,7 @@ restores them if you change anything.
 | `npm run db:stop`         | Stop local Supabase                                                   |
 | `npm run db:reset`        | Recreate the local DB from migrations + seed                          |
 | `npm run db:test`         | Database / RLS tests (pgTAP, `supabase/tests`)                        |
+| `npm run db:backup-test`  | Dump the local DB, restore into a fresh DB, verify every table        |
 | `npm run db:types`        | Regenerate `src/lib/supabase/database.types.ts`                       |
 | `npm run icons`           | Regenerate PWA icons from `scripts/generate-icons.mjs`                |
 

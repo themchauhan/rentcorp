@@ -282,14 +282,20 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
         ))}
 
       {/* ------------------------------------------------ Actions */}
-      {editable && due.started && outLines.length > 0 && (
+      {editable && due.started && (outLines.length > 0 || order.returns.length > 0) && (
         <Section title="Record return" initiallyOpen={overdue > 0} testId="section-return">
-          <ReturnForm
-            orderId={order.id}
-            lines={outLines}
-            minDate={order.event_start_date}
-            today={today}
-          />
+          {outLines.length > 0 ? (
+            <ReturnForm
+              orderId={order.id}
+              lines={outLines}
+              minDate={order.event_start_date}
+              today={today}
+            />
+          ) : (
+            <p className="text-sm font-medium text-green-800" role="status">
+              All items are back.
+            </p>
+          )}
         </Section>
       )}
       {editable && (

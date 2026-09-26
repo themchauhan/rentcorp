@@ -22,9 +22,10 @@ export default defineConfig({
   // Runs against a production build, which is what users get. CI has
   // already built in an earlier step, so it only starts the server.
   webServer: {
+    // Plain http on localhost, so session cookies can't be Secure here.
     command: process.env.CI
-      ? `npx next start -p ${PORT}`
-      : `npm run build && npx next start -p ${PORT}`,
+      ? `INSECURE_COOKIES=1 npx next start -p ${PORT}`
+      : `npm run build && INSECURE_COOKIES=1 npx next start -p ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

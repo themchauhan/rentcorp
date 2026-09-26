@@ -19,6 +19,7 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts && prettier --write src/lib/supabase/database.types.ts",
+    "db:backup-test": "bash scripts/backup-restore-test.sh",
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {

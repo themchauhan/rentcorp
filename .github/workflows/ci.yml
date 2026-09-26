@@ -31,6 +31,8 @@ jobs:
         run: npm run db:start
       - name: RLS / database tests
         run: npm run db:test
+      - name: Backup + restore check
+        run: npm run db:backup-test
       - name: Write .env.local from local Supabase
         run: |
           eval "$(npx supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=')"

@@ -5,20 +5,29 @@ until every item below is checked.
 
 ## Tasks
 
-- [ ] Review RLS and authorization for every table; write down the
-      review, don't just eyeball it
-- [ ] Systematically test cross-tenant access across every table and
-      route
-- [ ] Audit events exist for: booking create/edit, return, payment,
+- [x] Review RLS and authorization for every table; write down the
+      review, don't just eyeball it (`docs/security/rls-review.md`;
+      schema-wide invariants auto-tested in `90_security_sweep`)
+- [x] Systematically test cross-tenant access across every table and
+      route (pgTAP 10–90; `e2e/security.spec.ts` sweeps tenant-A URLs as
+      tenant B and uses a real tenant-B token directly against every table)
+- [x] Audit events exist for: booking create/edit, return, payment,
       user changes, subscription changes, every message send/copy
-- [ ] Database backup/recovery procedure documented and tested (a
-      real restore, not just a backup)
-- [ ] Secure session settings reviewed (cookie flags, session length)
+      (`e2e/audit.spec.ts` checks the money/message ones end to end)
+- [~] Database backup/recovery procedure documented and tested (a
+      real restore, not just a backup) — local restore tested
+      (`npm run db:backup-test`); **hosted restore drill still needs
+      you** (`docs/operations/backup-restore.md`)
+- [x] Secure session settings reviewed (cookie flags, session length) —
+      httpOnly/Lax/Secure cookies, security headers
+      (`docs/security/session-settings.md`); hosted inactivity timeout is
+      a decision for you
 - [ ] Decide on 2FA/MFA for owners and super admin (deferred from
       Phase 1c); if adopted, confirm it works for all admin accounts
 - [ ] Send on WhatsApp / Send SMS verified on the pilot's actual
       phones (Android and iOS if both are used)
-- [ ] Data retention/deletion policy written
+- [~] Data retention/deletion policy written — draft in
+      `docs/policies/data-retention.md`, **needs your sign-off**
 - [ ] Pilot runs with dummy data first; only after sign-off does a
       small controlled pilot with a real tent-house business begin
 

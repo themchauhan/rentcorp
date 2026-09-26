@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv } from "@/lib/env";
+import { SESSION_COOKIE_OPTIONS } from "@/lib/supabase/cookies";
 
 // Paths reachable without signing in.
 const PUBLIC_PATHS = ["/login"];
@@ -14,6 +15,7 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return request.cookies.getAll();

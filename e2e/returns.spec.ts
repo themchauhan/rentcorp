@@ -88,10 +88,9 @@ test("active → partial return → discount → full return → paid → closed
   s = await open(page, "section-return");
   await s.getByRole("button", { name: "Everything is back" }).click();
   await s.getByRole("button", { name: "Record return" }).click();
-  await expect(page.getByText("Return recorded.")).toBeVisible();
+  await expect(s.getByText("All items are back.")).toBeVisible();
   await expect(page.getByText("Balance to collect")).toBeVisible();
   await expect(due(page)).toHaveText("₹638");
-  await expect(page.getByTestId("section-return")).toHaveCount(0);
 
   // Final bill message is offered; not yet closable.
   const finalBill = page
