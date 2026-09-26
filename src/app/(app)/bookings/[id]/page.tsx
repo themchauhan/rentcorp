@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { StatusBadge } from "@/components/status-badge";
 import { FormMessage } from "@/components/ui/form";
-import { estimateStoredBooking } from "@/lib/bookings";
-import { formatDate, formatTime } from "@/lib/dates";
+import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
+import { formatDate, formatTime, todayIST } from "@/lib/dates";
 import { RATE_UNIT_LABEL } from "@/lib/items";
 import { formatRupees } from "@/lib/money";
 import { formatBasisPoints } from "@/lib/pricing";
@@ -37,6 +37,9 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
     a.item_name_snapshot.localeCompare(b.item_name_snapshot),
   );
   const estimate = estimateStoredBooking({ ...order, lines });
+  // Calculated fresh on every load.
+  const today = todayIST();
+  const due = amountDueForStoredBooking({ ...order, lines }, today);
   const customer = order.customer;
 
   return (
@@ -52,6 +55,56 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
       </div>
 
       {created && <FormMessage tone="success">Booking saved.</FormMessage>}
+
+      <div
+        className="rounded-2xl border border-brand-100 bg-brand-50 p-4"
+        data-testid="amount-due-card"
+      >
+        {order.status === "CANCELLED" ? (
+          <p className="font-semibold">This booking was cancelled.</p>
+        ) : !due.started ? (
+          <>
+            <p className="text-sm text-stone-600">Amount due today</p>
+            <p className="text-3xl font-bold" data-testid="amount-due">
+              {formatRupees(0)}
+            </p>
+            <p className="text-sm text-stone-600">
+              Starts on {formatDate(order.event_start_date)}. Nothing is due yet.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-stone-600">Amount due today · {formatDate(today)}</p>
+            <p className="text-3xl font-bold" data-testid="amount-due">
+              {formatRupees(due.amountDue)}
+            </p>
+            <p className="text-sm text-stone-600" data-testid="days-so-far">
+              Day {due.daysSoFar} of {estimate.days} planned
+              {due.daysSoFar > estimate.days ? " · past the return date" : ""}
+            </p>
+            <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+              <dt>Charges so far</dt>
+              <dd className="text-right">{formatRupees(due.gross)}</dd>
+              {due.discount > 0 && (
+                <>
+                  <dt>Discount</dt>
+                  <dd className="text-right">−{formatRupees(due.discount)}</dd>
+                </>
+              )}
+              <dt>Paid</dt>
+              <dd className="text-right">
+                {due.paid > 0 ? `−${formatRupees(due.paid)}` : formatRupees(0)}
+              </dd>
+              {due.credit > 0 && (
+                <>
+                  <dt>Customer credit</dt>
+                  <dd className="text-right">{formatRupees(due.credit)}</dd>
+                </>
+              )}
+            </dl>
+          </>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-stone-200 bg-white p-4">
@@ -81,7 +134,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
       </div>
 
       <div className="rounded-2xl border border-stone-200 bg-white p-4">
-        <h2 className="mb-3 text-lg font-semibold">Items</h2>
+        <h2 className="mb-3 text-lg font-semibold">Items · planned dates</h2>
         <table className="w-full text-sm" data-testid="booking-lines">
           <thead className="text-left text-xs text-stone-500">
             <tr>
@@ -131,7 +184,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
             )}
             <tr className="text-base font-bold">
               <td colSpan={3} className="pt-1">
-                Estimated total
+                Planned total
               </td>
               <td className="pt-1 text-right" data-testid="booking-total">
                 {formatRupees(estimate.total)}

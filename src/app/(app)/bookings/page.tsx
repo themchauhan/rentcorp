@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
-import { estimateStoredBooking } from "@/lib/bookings";
-import { formatDate } from "@/lib/dates";
+import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings";
+import { formatDate, todayIST } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,6 +34,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
   }
   const { data: orders, error } = await query;
   if (error) throw new Error("Couldn't load bookings");
+  const today = todayIST();
 
   return (
     <section className="space-y-5">
@@ -83,9 +84,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
                   <span>
                     {formatDate(o.event_start_date)} → {formatDate(o.expected_return_date)}
                   </span>
-                  <span className="font-medium text-stone-900">
-                    {formatRupees(estimateStoredBooking(o).total)}
-                  </span>
+                  <RowAmount order={o} today={today} />
                 </div>
               </Link>
             </li>
@@ -93,5 +92,32 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
         </ul>
       )}
     </section>
+  );
+}
+
+function RowAmount({
+  order,
+  today,
+}: {
+  order: Parameters<typeof amountDueForStoredBooking>[0];
+  today: string;
+}) {
+  if (order.status === "CANCELLED") return <span className="text-stone-500">Cancelled</span>;
+  const due = amountDueForStoredBooking(order, today);
+  if (!due.started) {
+    return (
+      <span className="text-right">
+        <span className="font-medium text-stone-900">
+          {formatRupees(estimateStoredBooking(order).total)}
+        </span>
+        <span className="block text-xs text-stone-500">planned</span>
+      </span>
+    );
+  }
+  return (
+    <span className="text-right">
+      <span className="font-medium text-stone-900">{formatRupees(due.amountDue)}</span>
+      <span className="block text-xs text-stone-500">due today</span>
+    </span>
   );
 }
