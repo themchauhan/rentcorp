@@ -71,6 +71,7 @@ export async function createBusiness(
     p_owner_name: ownerName.data,
     p_owner_mobile: ownerMobile,
     ...(businessPhone ? { p_tenant_phone: businessPhone } : {}),
+    p_is_test: formData.get("isTest") === "on",
   });
   if (error || !tenantId) {
     await removeUnprovisionedAuthUser(created.userId);
@@ -82,7 +83,12 @@ export async function createBusiness(
     "tenant.created",
     "tenant",
     tenantId,
-    { name: businessName.data, owner_id: created.userId, owner_mobile: ownerMobile },
+    {
+      name: businessName.data,
+      owner_id: created.userId,
+      owner_mobile: ownerMobile,
+      is_test: formData.get("isTest") === "on",
+    },
     { tenantId },
   );
   revalidatePath("/admin");

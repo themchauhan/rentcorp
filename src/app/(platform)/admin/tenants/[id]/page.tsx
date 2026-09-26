@@ -9,7 +9,13 @@ import { formatRupees } from "@/lib/money";
 import { addMonths, istDateOf } from "@/lib/subscriptions";
 import { createClient } from "@/lib/supabase/server";
 import { ResetOwnerButton } from "../../reset-owner-button";
-import { ExtendButtons, SubscriptionForm, SubscriptionPaymentForm } from "./forms";
+import {
+  DeleteTestBusinessForm,
+  ExtendButtons,
+  SubscriptionForm,
+  SubscriptionPaymentForm,
+  TestFlagForm,
+} from "./forms";
 
 export const metadata: Metadata = { title: "Business" };
 
@@ -30,7 +36,7 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
   const { data: t } = await supabase
     .from("tenants")
     .select(
-      "id, name, phone, status, plan, trial_ends_at, subscription_ends_at, created_at, owners:profiles (id, name, mobile, role, status)",
+      "id, name, phone, status, plan, is_test, trial_ends_at, subscription_ends_at, created_at, owners:profiles (id, name, mobile, role, status)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -55,7 +61,14 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
         ← Businesses
       </Link>
       <div>
-        <h1 className="text-2xl font-bold">{t.name}</h1>
+        <h1 className="text-2xl font-bold">
+          {t.name}
+          {t.is_test && (
+            <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 align-middle text-xs font-semibold text-purple-800">
+              TEST
+            </span>
+          )}
+        </h1>
         <p
           className={`mt-1 text-sm font-medium ${access.ok ? "text-green-700" : "text-red-700"}`}
           data-testid="tenant-access"
@@ -133,6 +146,17 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
           </div>
         ))}
       </div>
+      <div className={card}>
+        <h2 className="mb-3 font-semibold">Test business</h2>
+        <TestFlagForm tenantId={t.id} isTest={t.is_test} />
+      </div>
+
+      {t.is_test && (
+        <div className="rounded-2xl border border-red-300 bg-red-50 p-4">
+          <h2 className="mb-3 font-semibold text-red-900">Delete test business</h2>
+          <DeleteTestBusinessForm tenantId={t.id} name={t.name} />
+        </div>
+      )}
     </section>
   );
 }

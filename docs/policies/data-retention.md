@@ -27,6 +27,9 @@ payments.
 5. **Audit and message logs** follow the business's retention (rule 2–3).
 6. **Staff who leave**: deactivated, not deleted, so history still shows
    who did what.
+7. **Test businesses** (marked "Test" by the super admin) can be deleted
+   permanently from the app at any time, with everything in them. Never
+   mark a real business as Test.
 
 ## Needs your decision
 

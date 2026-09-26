@@ -57,6 +57,10 @@ export function CreateBusinessForm() {
           error={state.fieldErrors?.ownerMobile}
           required
         />
+        <label className="flex min-h-11 items-center gap-3 text-base">
+          <input type="checkbox" name="isTest" className="h-5 w-5 accent-brand-700" />
+          Test business (can be permanently deleted later)
+        </label>
         <SubmitButton pending={pending}>Create business</SubmitButton>
       </form>
     </div>

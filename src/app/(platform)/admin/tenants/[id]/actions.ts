@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/guards";
@@ -184,4 +185,57 @@ export async function recordSubscriptionPayment(
   }
   refresh(id.data);
   return { done: extend ? `Payment recorded. Active until ${periodEnd}.` : "Payment recorded." };
+}
+
+export async function setTestFlag(
+  _prev: AdminActionState,
+  fd: FormData,
+): Promise<AdminActionState> {
+  await requireRole("SUPER_ADMIN");
+  const id = tenantIdOf(fd);
+  if (!id.success) return { error: "Business not found." };
+  const isTest = fd.get("isTest") === "true";
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tenants")
+    .update({ is_test: isTest })
+    .eq("id", id.data)
+    .select("id");
+  if (error || !data?.length) return { error: "Couldn't update. Please try again." };
+  await logAudit(
+    "tenant.test_flag_changed",
+    "tenant",
+    id.data,
+    { is_test: isTest },
+    { tenantId: id.data },
+  );
+  refresh(id.data);
+  return { done: isTest ? "Marked as a test business." : "No longer a test business." };
+}
+
+/**
+ * Permanently deletes a business marked as Test, with everything in it and
+ * its staff logins. The database function re-checks every rule.
+ */
+export async function deleteTestBusiness(
+  _prev: AdminActionState,
+  fd: FormData,
+): Promise<AdminActionState> {
+  await requireRole("SUPER_ADMIN");
+  const id = tenantIdOf(fd);
+  if (!id.success) return { error: "Business not found." };
+  const confirm = String(fd.get("confirmName") ?? "");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_test_business", {
+    p_tenant_id: id.data,
+    p_confirm_name: confirm,
+  });
+  if (error) {
+    if (["22023", "23514", "42501", "23503"].includes(error.code ?? ""))
+      return { error: error.message };
+    console.error("delete_test_business failed:", error.code, error.message);
+    return { error: "Couldn't delete. Nothing was changed." };
+  }
+  revalidatePath("/admin");
+  redirect(`/admin?deleted=${encodeURIComponent(confirm)}`);
 }

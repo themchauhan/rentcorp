@@ -16,13 +16,14 @@ const STATUS_LABEL = {
   EXPIRED: "Expired",
 } as const;
 
-export default async function PlatformAdminPage() {
+export default async function PlatformAdminPage({ searchParams }: PageProps<"/admin">) {
   await requireRole("SUPER_ADMIN");
+  const deleted = (await searchParams).deleted;
   const supabase = await createClient();
   const { data: tenants, error } = await supabase
     .from("tenants")
     .select(
-      "id, name, status, plan, trial_ends_at, subscription_ends_at, owners:profiles (name, mobile, role)",
+      "id, name, status, plan, is_test, trial_ends_at, subscription_ends_at, owners:profiles (name, mobile, role)",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error("Couldn't load businesses");
@@ -47,6 +48,11 @@ export default async function PlatformAdminPage() {
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Businesses</h1>
+      {typeof deleted === "string" && (
+        <p role="status" className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+          Deleted test business “{deleted}”.
+        </p>
+      )}
 
       <dl className="grid grid-cols-3 gap-2 text-center" data-testid="admin-counts">
         {tiles.map(([label, n]) => (
@@ -69,7 +75,14 @@ export default async function PlatformAdminPage() {
                 className="block rounded-xl border border-stone-200 bg-white p-4 hover:bg-stone-50"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="font-semibold">{t.name}</p>
+                  <p className="font-semibold">
+                    {t.name}
+                    {t.is_test && (
+                      <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-800">
+                        TEST
+                      </span>
+                    )}
+                  </p>
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       !access.ok

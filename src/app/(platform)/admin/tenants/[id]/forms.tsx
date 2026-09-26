@@ -3,8 +3,10 @@
 import { useActionState, useState } from "react";
 import { FormMessage } from "@/components/ui/form";
 import {
+  deleteTestBusiness,
   extendSubscription,
   recordSubscriptionPayment,
+  setTestFlag,
   updateSubscription,
   type AdminActionState,
 } from "./actions";
@@ -239,6 +241,67 @@ export function SubscriptionPaymentForm({
       </label>
       <button type="submit" disabled={pending} className={primary}>
         Record payment
+      </button>
+    </form>
+  );
+}
+
+export function TestFlagForm({ tenantId, isTest }: { tenantId: string; isTest: boolean }) {
+  const [state, action, pending] = useActionState<AdminActionState, FormData>(setTestFlag, {});
+  return (
+    <form action={action} className="space-y-3" data-testid="test-flag-form">
+      <input type="hidden" name="tenantId" value={tenantId} />
+      <input type="hidden" name="isTest" value={isTest ? "false" : "true"} />
+      <Result state={state} />
+      <p className="text-sm text-stone-600">
+        {isTest
+          ? "This is marked as a test business, so it can be permanently deleted."
+          : "Real business. Mark it as a test only if it holds test data you may want to delete."}
+      </p>
+      <button
+        type="submit"
+        disabled={pending}
+        className="min-h-11 w-full rounded-lg border border-stone-300 bg-white font-medium disabled:opacity-60"
+      >
+        {isTest ? "This is a real business (unmark test)" : "Mark as test business"}
+      </button>
+    </form>
+  );
+}
+
+export function DeleteTestBusinessForm({ tenantId, name }: { tenantId: string; name: string }) {
+  const [state, action, pending] = useActionState<AdminActionState, FormData>(
+    deleteTestBusiness,
+    {},
+  );
+  const [typed, setTyped] = useState("");
+  return (
+    <form action={action} className="space-y-3" data-testid="delete-test-form">
+      <input type="hidden" name="tenantId" value={tenantId} />
+      <Result state={state} />
+      <p className="text-sm text-red-800">
+        Permanently deletes this business, its items, customers, bookings, payments, messages and
+        all its staff logins. This can’t be undone.
+      </p>
+      <div>
+        <label htmlFor="confirmName" className={label}>
+          Type <strong>{name}</strong> to confirm
+        </label>
+        <input
+          id="confirmName"
+          name="confirmName"
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          className={input}
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={pending || typed !== name}
+        className="min-h-12 w-full rounded-lg bg-red-700 px-5 font-semibold text-white disabled:opacity-40"
+      >
+        {pending ? "Deleting…" : "Delete test business permanently"}
       </button>
     </form>
   );

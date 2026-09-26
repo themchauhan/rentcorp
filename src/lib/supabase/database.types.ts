@@ -623,6 +623,7 @@ export type Database = {
           created_at: string;
           email: string | null;
           id: string;
+          is_test: boolean;
           name: string;
           phone: string | null;
           plan: string | null;
@@ -635,6 +636,7 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           id?: string;
+          is_test?: boolean;
           name: string;
           phone?: string | null;
           plan?: string | null;
@@ -647,6 +649,7 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           id?: string;
+          is_test?: boolean;
           name?: string;
           phone?: string | null;
           plan?: string | null;
@@ -679,6 +682,10 @@ export type Database = {
         };
         Returns: string;
       };
+      delete_test_business: {
+        Args: { p_confirm_name: string; p_tenant_id: string };
+        Returns: Json;
+      };
       item_commitments: {
         Args: { p_end: string; p_start: string };
         Returns: {
@@ -689,6 +696,7 @@ export type Database = {
       mark_password_changed: { Args: Record<PropertyKey, never>; Returns: undefined };
       provision_tenant_with_owner: {
         Args: {
+          p_is_test?: boolean;
           p_owner_id: string;
           p_owner_mobile: string;
           p_owner_name: string;

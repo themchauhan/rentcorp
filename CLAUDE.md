@@ -29,7 +29,9 @@ Full spec: `docs/BRIEF.md`. Phase checklists: `docs/phases/phase-N.md`
 5. **Dummy data only in seeds/fixtures.** Never real customer names,
    phone numbers, or addresses.
 6. **No hard deletes** on bookings, customers, or payment records —
-   soft-delete only.
+   soft-delete only. Sole exception: the super admin may permanently
+   delete a business **marked as Test** (typed-name confirmation,
+   `public.delete_test_business()`), for test data only.
 7. **No online payment integration.** Payments received are recorded
    manually (amount + mode + received-by).
 8. **Rate snapshotting is mandatory.** An order's item rates are

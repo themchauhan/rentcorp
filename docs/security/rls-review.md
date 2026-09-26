@@ -50,7 +50,9 @@ SECURITY DEFINER functions and their own checks: `cancel_booking`
 (writable + owner + same tenant + no returns), `close_booking` (writable +
 same tenant + all returned + `final_balance_paise ≤ 0`),
 `provision_tenant_with_owner` (service_role only), `mark_password_changed`
-(own row only). `create_booking` and `record_returns` run as the caller
+(own row only), `delete_test_business` (platform admin + business marked
+`is_test` + exact-name confirmation; the only hard delete, all-or-nothing,
+leaves a platform audit entry) [`85_test_business_delete`]. `create_booking` and `record_returns` run as the caller
 (RLS applies).
 
 ## App layer
