@@ -11,7 +11,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -25,11 +25,28 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
+
+      # Local Supabase (Docker) with migrations + seed applied.
+      - name: Start Supabase
+        run: npm run db:start
+      - name: RLS / database tests
+        run: npm run db:test
+      - name: Write .env.local from local Supabase
+        run: |
+          eval "$(npx supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=')"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3100"
+          } > .env.local
+
       - run: npm run build
+      - name: No secrets in client bundle
+        run: node scripts/check-client-bundle.mjs
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
-      - name: E2E smoke tests
+      - name: E2E tests
         run: npm run test:e2e
 
       - uses: actions/upload-artifact@v4

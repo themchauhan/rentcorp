@@ -28,6 +28,11 @@ tent-house businesses, each seeing only their own data.
 
 ## Roles
 
+Everyone logs in with their **mobile number + password**. Accounts are
+created by an admin (no public signup, no SMS/OTP); forgotten
+passwords are reset by the owner (staff) or super admin (owners).
+
+
 - **SUPER_ADMIN** — you, the SaaS owner. Create/manage tenant
   businesses, plans, trial/expiry, review payments.
 - **ADMIN** (business owner) — manage item catalog, rates, view all
@@ -66,7 +71,8 @@ tent-house businesses, each seeing only their own data.
 | Table | Key fields |
 |---|---|
 | `tenants` | id, name, phone, email, status, plan, trial_ends_at, subscription_ends_at |
-| `profiles` | id (Auth user), tenant_id, name, role (SUPER_ADMIN/ADMIN/STAFF), status |
+| `profiles` | id (Auth user), tenant_id, name, mobile (login id), role (ADMIN/STAFF), status |
+| `platform_admins` | user_id (Auth user), name — SUPER_ADMIN accounts, not tied to a tenant |
 | `rental_items` | id, tenant_id, name, category, unit_label, total_quantity_owned, rate_amount, rate_unit (`PER_DAY`\|`PER_EVENT`), active |
 | `rental_customers` | id, tenant_id, name, mobile, whatsapp_number (nullable, defaults to mobile), preferred_channel (`WHATSAPP`\|`SMS`), address |
 | `rental_orders` | id, tenant_id, customer_id, order_date, event_start_date, expected_return_date, status (`ACTIVE`\|`PARTIALLY_RETURNED`\|`RETURNED`\|`OVERDUE`\|`CANCELLED`), security_deposit_amount (nullable), discount_type (`NONE`\|`FLAT`\|`PERCENT`), discount_value, discount_reason (nullable), discount_updated_by, discount_updated_at, notes, created_by |

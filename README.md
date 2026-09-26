@@ -37,7 +37,12 @@ npm run db:start
 ```
 
 The first run downloads the Supabase Docker images and takes a few
-minutes. When it finishes it prints the local URLs and keys.
+minutes. It applies the migrations in `supabase/migrations` and loads
+the dummy data in `supabase/seed.sql`, then prints the local URLs and
+keys.
+
+`db:start` skips Studio (the database admin UI) because it is slow to
+boot on smaller machines. Use `npm run db:start:studio` when you want it.
 
 This project uses ports **55420–55429** (not Supabase's default
 54321–54329), so it can run alongside other local Supabase projects.
@@ -45,8 +50,7 @@ This project uses ports **55420–55429** (not Supabase's default
 | Service              | URL                                                       |
 | -------------------- | --------------------------------------------------------- |
 | API                  | http://127.0.0.1:55421                                    |
-| Studio (DB admin UI) | http://127.0.0.1:55423                                    |
-| Mailpit (test inbox) | http://127.0.0.1:55424                                    |
+| Studio (DB admin UI) | http://127.0.0.1:55423 (only with `db:start:studio`)      |
 | Postgres             | `postgresql://postgres:postgres@127.0.0.1:55422/postgres` |
 
 Re-print the keys any time with `npx supabase status`.
@@ -55,8 +59,9 @@ Re-print the keys any time with `npx supabase status`.
 > short on CPU/memory. Stop any other local Supabase project
 > (`npx supabase stop` in its folder) and/or raise Docker Desktop's
 > limits (Settings → Resources; 4+ CPUs and 6+ GB RAM recommended),
-> then run `npm run db:start` again. Realtime and analytics are
-> disabled in `supabase/config.toml` because this app doesn't use them.
+> then run `npm run db:start` again. Realtime, analytics, storage and
+> edge functions are disabled in `supabase/config.toml` because the app
+> doesn't use them yet.
 
 ### 2. Create your env file
 
@@ -74,26 +79,46 @@ never commit real keys.
 npm run dev
 ```
 
-Open http://localhost:3000. To try it at phone size, use your browser's
+Open http://localhost:3000 and log in with a seed account. To try it at phone size, use your browser's
 device toolbar, or open `http://<your-computer's-LAN-IP>:3000` on a
 phone on the same Wi-Fi.
 
+### Seed logins (local only)
+
+Everyone logs in with a **mobile number + password**. All seed accounts
+use the password `Demo@1234`:
+
+| Mobile       | Account                          |
+| ------------ | -------------------------------- |
+| `9000000001` | Super admin (platform dashboard) |
+| `9000000101` | Owner (admin), Demo Tent House A |
+| `9000000102` | Staff, Demo Tent House A         |
+| `9000000103` | Deactivated staff (can't log in) |
+| `9000000201` | Owner (admin), Demo Tent House B |
+| `9000000301` | Owner of a suspended business    |
+
+The full list is at the top of `supabase/seed.sql`. `npm run db:reset`
+restores them if you change anything.
+
 ## Scripts
 
-| Command                | What it does                                           |
-| ---------------------- | ------------------------------------------------------ |
-| `npm run dev`          | Dev server on http://localhost:3000                    |
-| `npm run build`        | Production build                                       |
-| `npm run lint`         | ESLint (fails on any warning)                          |
-| `npm run typecheck`    | Generate Next route types, then `tsc --noEmit`         |
-| `npm run format`       | Format everything with Prettier                        |
-| `npm run format:check` | Check formatting without writing                       |
-| `npm test`             | Unit tests (Vitest)                                    |
-| `npm run test:e2e`     | Smoke tests (Playwright, phone + desktop)              |
-| `npm run db:start`     | Start local Supabase                                   |
-| `npm run db:stop`      | Stop local Supabase                                    |
-| `npm run db:reset`     | Recreate the local DB from migrations + seed           |
-| `npm run icons`        | Regenerate PWA icons from `scripts/generate-icons.mjs` |
+| Command                   | What it does                                                          |
+| ------------------------- | --------------------------------------------------------------------- |
+| `npm run dev`             | Dev server on http://localhost:3000                                   |
+| `npm run build`           | Production build                                                      |
+| `npm run lint`            | ESLint (fails on any warning)                                         |
+| `npm run typecheck`       | Generate Next route types, then `tsc --noEmit`                        |
+| `npm run format`          | Format everything with Prettier                                       |
+| `npm run format:check`    | Check formatting without writing                                      |
+| `npm test`                | Unit tests (Vitest)                                                   |
+| `npm run test:e2e`        | E2E tests (Playwright, phone + desktop; needs local Supabase running) |
+| `npm run db:start`        | Start local Supabase (without Studio)                                 |
+| `npm run db:start:studio` | Start local Supabase including Studio                                 |
+| `npm run db:stop`         | Stop local Supabase                                                   |
+| `npm run db:reset`        | Recreate the local DB from migrations + seed                          |
+| `npm run db:test`         | Database / RLS tests (pgTAP, `supabase/tests`)                        |
+| `npm run db:types`        | Regenerate `src/lib/supabase/database.types.ts`                       |
+| `npm run icons`           | Regenerate PWA icons from `scripts/generate-icons.mjs`                |
 
 ### First-time Playwright setup
 
@@ -111,7 +136,7 @@ src/app/          Routes (App Router), layout, error/404 pages, manifest
 src/components/   Shared UI (app shell, navigation)
 src/lib/          Plain TypeScript helpers (unit-tested alongside, *.test.ts)
 e2e/              Playwright tests
-supabase/         Local Supabase config; migrations + seed arrive in Phase 1b
+supabase/         Local Supabase config, migrations, seed, pgTAP tests
 docs/             Product brief and phase checklists
 scripts/          One-off dev scripts
 ```
@@ -120,7 +145,8 @@ scripts/          One-off dev scripts
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull
 request: install → lint → format check → typecheck → unit tests →
-build → Playwright smoke tests.
+start local Supabase → RLS tests → build → client-bundle secret check →
+Playwright e2e tests.
 
 ## Deployment
 
