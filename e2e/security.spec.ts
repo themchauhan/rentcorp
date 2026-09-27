@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { userDb } from "./db-client";
-import { IDS, login, PASSWORD, USERS } from "./helpers";
+import { expectNotFound, IDS, login, PASSWORD, USERS } from "./helpers";
 
 const TENANT_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
@@ -26,7 +26,7 @@ test("security headers are sent", async ({ request }) => {
   expect(h["x-powered-by"]).toBeUndefined();
 });
 
-test("every tenant-A page is not found for tenant B", async ({ page }, testInfo) => {
+test("every tenant-A page shows not found for tenant B", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "route sweep runs once");
   await login(page, USERS.adminB);
   for (const path of [
@@ -34,8 +34,7 @@ test("every tenant-A page is not found for tenant B", async ({ page }, testInfo)
     `/bookings/${IDS.bookingA_seed}`,
     `/customers/${IDS.customerA_ravi}`,
   ]) {
-    const res = await page.goto(path);
-    expect(res?.status(), path).toBe(404);
+    await expectNotFound(page, path);
   }
   await page.goto(`/admin/tenants/${TENANT_A}`);
   await expect(page).toHaveURL(/\/no-access$/);

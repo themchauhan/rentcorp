@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { IDS, istDate, login, randomMobile, uniq, USERS } from "./helpers";
+import { IDS, istDate, login, randomMobile, uniq, USERS, waitForHydration } from "./helpers";
 
 async function newBooking(
   page: Page,
@@ -183,6 +183,7 @@ test("returns and payments validate input", async ({ page }) => {
   await expect(s.getByText("Enter a quantity to return.")).toBeVisible();
 
   // A tampered quantity beyond what's out is refused by the database.
+  await waitForHydration(page);
   await s.locator('input[name="items"]').evaluate((el) => {
     const input = el as HTMLInputElement;
     const items = JSON.parse(input.value) as { lineId: string; quantity: number }[];
@@ -198,6 +199,7 @@ test("another business can't record payments or returns on your bookings", async
 
   const payment = await open(page, "section-payment");
   await payment.getByLabel("Amount received ₹").fill("1");
+  await waitForHydration(page);
   await payment.locator('input[name="orderId"]').evaluate((el, id) => {
     (el as HTMLInputElement).value = id;
   }, IDS.bookingA_seed);
@@ -207,6 +209,7 @@ test("another business can't record payments or returns on your bookings", async
   const ret = await open(page, "section-return");
   // Fill first (this re-renders the form), then tamper, then submit.
   await ret.getByRole("button", { name: "Everything is back" }).click();
+  await waitForHydration(page);
   await ret.locator('input[name="orderId"]').evaluate((el, id) => {
     (el as HTMLInputElement).value = id;
   }, IDS.bookingA_seed);

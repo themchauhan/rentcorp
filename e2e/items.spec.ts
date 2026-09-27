@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { formAlert, IDS, login, uniq, USERS } from "./helpers";
+import { expectNotFound, formAlert, IDS, login, uniq, USERS, waitForHydration } from "./helpers";
 
 const itemRow = (page: Page, name: string) =>
   page.getByTestId("item-row").filter({ hasText: name });
@@ -124,11 +124,11 @@ test("another business's item is invisible and can't be edited", async ({ page }
   await page.goto("/items");
   await expect(itemRow(page, "Plastic chair")).toHaveCount(0);
 
-  const response = await page.goto(`/items/${IDS.itemA_plasticChair}`);
-  expect(response?.status()).toBe(404);
+  await expectNotFound(page, `/items/${IDS.itemA_plasticChair}`);
 
   // Tamper with B's own edit form so it targets A's item.
   await page.goto(`/items/${IDS.itemB_foldingChair}`);
+  await waitForHydration(page);
   await page.locator('input[name="itemId"]').evaluateAll((inputs, id) => {
     for (const input of inputs as HTMLInputElement[]) input.value = id;
   }, IDS.itemA_plasticChair);

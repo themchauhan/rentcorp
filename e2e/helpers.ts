@@ -80,3 +80,18 @@ export async function readTempPassword(page: Page): Promise<string> {
   await expect(el).toBeVisible();
   return (await el.textContent())!.trim();
 }
+
+/**
+ * Waits until the page has finished streaming and React has taken over the
+ * forms. Tamper tests must call this before editing hidden inputs, or
+ * hydration can quietly restore the real values.
+ */
+export async function waitForHydration(page: Page) {
+  await page.waitForLoadState("networkidle");
+}
+
+/** Another business's record: rendered as the not-found page (no data). */
+export async function expectNotFound(page: Page, path: string) {
+  await page.goto(path);
+  await expect(page.getByRole("heading", { name: "Page not found" }), path).toBeVisible();
+}

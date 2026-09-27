@@ -10,6 +10,7 @@ import {
   randomMobile,
   readTempPassword,
   USERS,
+  waitForHydration,
 } from "./helpers";
 
 async function addStaff(page: Page, name: string, mobile: string) {
@@ -149,6 +150,7 @@ test("an owner cannot deactivate or reset another business's staff", async ({ pa
   const row = staffRow(page, "9000000202");
 
   // Point both of Tenant B's staff forms at Tenant A's staff member.
+  await waitForHydration(page);
   await row.locator('input[name="profileId"]').evaluateAll((inputs, id) => {
     for (const input of inputs as HTMLInputElement[]) input.value = id;
   }, IDS.staffA);

@@ -1,9 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { isActivePath, navItems } from "@/lib/nav";
+import { isNavItemActive, navItems, type NavItem } from "@/lib/nav";
 import { NavIcon } from "./nav-icon";
+import { Spinner } from "./spinner";
+
+/** The tab's icon, swapped for a spinner while its page is loading. */
+function TabIcon({ name }: { name: NavItem["icon"] }) {
+  const { pending } = useLinkStatus();
+  return pending ? <Spinner className="h-6 w-6" /> : <NavIcon name={name} />;
+}
 
 /** Fixed bottom tab bar, shown on phones only. */
 export function BottomNav() {
@@ -15,7 +22,7 @@ export function BottomNav() {
     >
       <ul className="grid grid-cols-5">
         {navItems.map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = isNavItemActive(pathname, item);
           return (
             <li key={item.href}>
               <Link
@@ -25,7 +32,7 @@ export function BottomNav() {
                   active ? "text-brand-700" : "text-stone-500"
                 }`}
               >
-                <NavIcon name={item.icon} />
+                <TabIcon name={item.icon} />
                 {item.label}
               </Link>
             </li>
@@ -43,7 +50,7 @@ export function SideNav() {
     <nav aria-label="Main" className="hidden md:block">
       <ul className="space-y-1">
         {navItems.map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = isNavItemActive(pathname, item);
           return (
             <li key={item.href}>
               <Link
@@ -53,7 +60,7 @@ export function SideNav() {
                   active ? "bg-brand-50 text-brand-700" : "text-stone-600 hover:bg-stone-100"
                 }`}
               >
-                <NavIcon name={item.icon} />
+                <TabIcon name={item.icon} />
                 {item.label}
               </Link>
             </li>

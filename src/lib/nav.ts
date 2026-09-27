@@ -2,6 +2,8 @@ export type NavItem = {
   href: string;
   label: string;
   icon: "home" | "bookings" | "items" | "customers" | "more";
+  /** Other sections that live under this tab (highlight it there too). */
+  also?: string[];
 };
 
 // Placeholder destinations only — each screen is built in its own phase.
@@ -10,7 +12,7 @@ export const navItems: NavItem[] = [
   { href: "/bookings", label: "Bookings", icon: "bookings" },
   { href: "/items", label: "Items", icon: "items" },
   { href: "/customers", label: "Customers", icon: "customers" },
-  { href: "/more", label: "More", icon: "more" },
+  { href: "/more", label: "More", icon: "more", also: ["/reports", "/team", "/settings"] },
 ];
 
 /**
@@ -21,4 +23,9 @@ export const navItems: NavItem[] = [
 export function isActivePath(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Whether a tab is highlighted, including the sections it owns. */
+export function isNavItemActive(pathname: string, item: NavItem): boolean {
+  return [item.href, ...(item.also ?? [])].some((href) => isActivePath(pathname, href));
 }

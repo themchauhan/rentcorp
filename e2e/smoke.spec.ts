@@ -58,3 +58,25 @@ test("pages never scroll sideways", async ({ page }) => {
     expect(overflow, path).toBeLessThanOrEqual(0);
   }
 });
+
+test("pages opened from More keep More highlighted and have a back link", async ({ page }) => {
+  await login(page, USERS.adminA);
+  const nav = page.getByRole("navigation", { name: "Main" });
+  for (const path of ["/reports", "/team", "/settings", "/more/password"]) {
+    await page.goto(path);
+    await expect(nav.getByRole("link", { name: "More" }), path).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await page.getByRole("main").getByRole("link", { name: "← More" }).click();
+    await expect(page).toHaveURL(/\/more$/);
+  }
+});
+
+test("login mobile field shows a plain hint, not a fake number", async ({ page }) => {
+  await page.goto("/login");
+  await expect(page.getByLabel("Mobile number")).toHaveAttribute(
+    "placeholder",
+    "Enter your mobile number",
+  );
+});

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackLink } from "@/components/back-link";
 import { requireTenantAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { AddStaffForm } from "./add-staff-form";
@@ -21,6 +22,7 @@ export default async function TeamPage() {
   return (
     <section className="space-y-8">
       <div>
+        <BackLink href="/more" label="More" />
         <h1 className="text-2xl font-bold text-stone-900">Team</h1>
         <p className="mt-1 text-stone-600">Add staff and manage their logins.</p>
       </div>

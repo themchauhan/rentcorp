@@ -16,7 +16,7 @@ export function LoginForm() {
         type="tel"
         inputMode="numeric"
         autoComplete="username"
-        placeholder="98765 43210"
+        placeholder="Enter your mobile number"
         defaultValue={state.mobile}
         error={state.fieldErrors?.mobile}
         required

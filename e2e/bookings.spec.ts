@@ -1,5 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
-import { formAlert, IDS, istDate, login, randomMobile, uniq, USERS } from "./helpers";
+import {
+  expectNotFound,
+  formAlert,
+  IDS,
+  istDate,
+  login,
+  randomMobile,
+  uniq,
+  USERS,
+  waitForHydration,
+} from "./helpers";
 
 async function createItem(page: Page, name: string, price: string, perEvent = false) {
   await page.goto("/items/new");
@@ -144,8 +154,8 @@ test("another business's bookings and customers are invisible", async ({ page })
   await page.goto("/bookings");
   await expect(page.getByText("Demo Customer Ravi")).toHaveCount(0);
 
-  expect((await page.goto(`/bookings/${IDS.bookingA_seed}`))?.status()).toBe(404);
-  expect((await page.goto(`/customers/${IDS.customerA_ravi}`))?.status()).toBe(404);
+  await expectNotFound(page, `/bookings/${IDS.bookingA_seed}`);
+  await expectNotFound(page, `/customers/${IDS.customerA_ravi}`);
   await page.goto("/customers");
   await expect(
     page.getByTestId("customer-row").filter({ hasText: "Demo Customer Ravi" }),
@@ -159,6 +169,7 @@ test("forged customer or item ids from another business are rejected", async ({ 
   await page.goto("/bookings/new");
   await pickCustomer(page, "Demo Customer Imran");
   await setQty(page, "Folding chair", 1);
+  await waitForHydration(page);
   await page.locator('input[name="customerId"]').evaluate((el, id) => {
     (el as HTMLInputElement).value = id;
   }, IDS.customerA_ravi);
@@ -169,6 +180,7 @@ test("forged customer or item ids from another business are rejected", async ({ 
   await page.goto("/bookings/new");
   await pickCustomer(page, "Demo Customer Imran");
   await setQty(page, "Folding chair", 1);
+  await waitForHydration(page);
   await page.locator('input[name="lines"]').evaluate((el, id) => {
     (el as HTMLInputElement).value = JSON.stringify([{ itemId: id, quantity: 1 }]);
   }, IDS.itemA_plasticChair);

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
 import { StatusBadge } from "@/components/status-badge";
 import { requireTenantAdmin } from "@/lib/auth/guards";
 import { daysOverdue, effectiveStatus } from "@/lib/booking-status";
@@ -112,7 +113,10 @@ export default async function ReportsPage({ searchParams }: PageProps<"/reports"
 
   return (
     <section className="max-w-2xl space-y-5">
-      <h1 className="text-2xl font-bold text-stone-900">Reports</h1>
+      <div>
+        <BackLink href="/more" label="More" />
+        <h1 className="text-2xl font-bold text-stone-900">Reports</h1>
+      </div>
 
       {/* ------------------------------------------------ Today */}
       <div className={card} data-testid="report-today">
