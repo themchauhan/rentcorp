@@ -1,4 +1,4 @@
-# Tent House Rental SaaS — Product Brief
+# RentCorp SaaS — Product Brief
 
 ## Product goal
 

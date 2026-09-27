@@ -1,4 +1,4 @@
-# Tent House Rental SaaS — Claude Code project rules
+# RentCorp SaaS — Claude Code project rules
 
 Read at the start of every session. Follow it over any conflicting
 instinct.
