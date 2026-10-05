@@ -6,14 +6,15 @@ export function Field({
   error,
   ...input
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; name: string; error?: string }) {
-  const errorId = error ? `${name}-error` : undefined;
+  const inputId = input.id ?? name;
+  const errorId = error ? `${inputId}-error` : undefined;
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium text-stone-700">
+      <label htmlFor={inputId} className="block text-sm font-medium text-stone-700">
         {label}
       </label>
       <input
-        id={name}
+        id={inputId}
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={errorId}

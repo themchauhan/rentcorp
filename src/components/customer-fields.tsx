@@ -13,12 +13,14 @@ export function CustomerFields({
   errors = {},
   prefix = "",
   showWhatsAppConsent = false,
+  nameLabel = "Customer name",
 }: {
   initial: CustomerFormInput;
   errors?: Partial<Record<CustomerFormField, string>>;
   prefix?: string;
   /** Only for businesses with the WhatsApp automation add-on. */
   showWhatsAppConsent?: boolean;
+  nameLabel?: string;
 }) {
   const [notOnWhatsapp, setNotOnWhatsapp] = useState(initial.notOnWhatsapp);
   const [channel, setChannel] = useState<Channel>(initial.preferredChannel);
@@ -27,7 +29,7 @@ export function CustomerFields({
   return (
     <div className="space-y-4">
       <Field
-        label="Customer name"
+        label={nameLabel}
         name={`${prefix}name`}
         defaultValue={initial.name}
         error={errors.name}

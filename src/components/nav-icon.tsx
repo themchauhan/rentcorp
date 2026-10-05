@@ -8,6 +8,9 @@ const paths: Record<NavItem["icon"], string> = {
   customers:
     "M16 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 9v-1a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8",
   more: "M4 6h16M4 12h16M4 18h16",
+  rooms: "M3 20v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8M3 16h18M7 10V6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4",
+  complaints:
+    "M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z",
 };
 
 export function NavIcon({ name }: { name: NavItem["icon"] }) {

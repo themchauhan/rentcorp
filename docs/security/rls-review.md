@@ -49,6 +49,14 @@ below is backed by an automated test (named in brackets).
 | job_runs | super admin | server only | server only | 96 |
 | private.whatsapp_credentials | not exposed; tokens in Vault, read only via `wa_access_token()` (service_role) | `wa_set_credentials()` (service_role) | — | 95 |
 | private.booking_counters | not exposed | trigger only | trigger only | 40 |
+| pg_rooms, pg_beds, pg_meal_plans, pg_settings | members | owner of a writable **hostel/PG** (`writable_pg_tenant_id()`) | same; occupied rooms can't change rent type or be removed | 97 |
+| pg_resident_details | members | members of a writable PG | members of a writable PG | 97 |
+| pg_stays, pg_stay_rates, pg_stay_adjustments | members | definer functions only (`pg_move_in`, `pg_change_rates` owner, `pg_add_adjustment` owner); direct writes revoked | definer functions only (`pg_give_notice`, `pg_withdraw_notice`, `pg_settle_move_out` owner, `pg_cancel_stay` owner) | 97 |
+| pg_payments | members | members of a writable PG; refunds and reversals owner-only; received-by forced | none (append-only) | 97 |
+| pg_complaints | members | members of a writable PG; raiser/time forced | members of a writable PG; original text/raiser kept, resolver stamped | 97 |
+| pg_id_documents | members | members of a writable PG; path must be `<tenant>/<customer>/…` | owner: mark removed only (even read-only) | 97 |
+| storage.objects (`resident-ids`) | members, own `<tenant>/` folder only (app streams via `/api/id-photos/[id]`, no-store) | writable PG, own folder | none; delete: owner, own folder | 97, e2e |
+| tenants.business_type | — | super admin at creation | never (trigger) | 97 |
 
 SECURITY DEFINER functions and their own checks: `cancel_booking`
 (writable + owner + same tenant + no returns), `close_booking` (writable +

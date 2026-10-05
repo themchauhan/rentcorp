@@ -14,6 +14,7 @@ import {
   summarizeDiscounts,
 } from "@/lib/reports";
 import { createClient } from "@/lib/supabase/server";
+import { PgReports } from "./pg-reports";
 
 export const metadata: Metadata = { title: "Reports" };
 
@@ -28,9 +29,11 @@ const ORDER_FIELDS = `id, booking_number, status, event_start_date, expected_ret
   payments:rental_payments (amount_paise)`;
 
 export default async function ReportsPage({ searchParams }: PageProps<"/reports">) {
-  await requireTenantAdmin({ write: false });
+  const owner = await requireTenantAdmin({ write: false });
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  if (owner.tenant.business_type === "HOSTEL_PG")
+    return <PgReports from={one(sp.from)} to={one(sp.to)} />;
   const today = todayIST();
   const range = resolveRange(one(sp.from), one(sp.to), today);
   const todayBounds = istDayBounds(today, today);

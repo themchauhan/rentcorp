@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient, type SupabaseServerClient } from "@/lib/supabase/server";
-import type { TenantStatus } from "./access";
+import type { BusinessType, TenantStatus } from "./access";
 
 export type SessionTenant = {
   id: string;
@@ -11,6 +11,8 @@ export type SessionTenant = {
   subscription_ends_at: string | null;
   /** WhatsApp automation add-on (switched by the super admin). */
   whatsapp_addon: boolean;
+  /** Tent house (bookings/items) or hostel/PG (rooms/residents). */
+  business_type: BusinessType;
 };
 
 export type SessionProfile =
@@ -68,7 +70,7 @@ export async function loadProfile(
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "name, role, status, must_change_password, tenant_id, tenant:tenants (id, name, status, trial_ends_at, subscription_ends_at, whatsapp_addon)",
+      "name, role, status, must_change_password, tenant_id, tenant:tenants (id, name, status, trial_ends_at, subscription_ends_at, whatsapp_addon, business_type)",
     )
     .eq("id", userId)
     .maybeSingle();

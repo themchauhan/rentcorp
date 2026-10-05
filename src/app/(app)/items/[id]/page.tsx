@@ -13,7 +13,7 @@ import { StatusToggle } from "./status-toggle";
 export const metadata: Metadata = { title: "Edit item" };
 
 export default async function EditItemPage({ params }: PageProps<"/items/[id]">) {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 

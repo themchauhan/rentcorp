@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { FormMessage } from "@/components/ui/form";
 import { buildMessage, type MessageContext, type MessageType } from "@/lib/messages";
+import { buildPgMessage, PG_SAMPLE, type PgMessageType } from "@/lib/pg-messages";
 import { saveTemplate, type TemplateState } from "./actions";
 
 const SAMPLE: MessageContext = {
@@ -48,7 +49,7 @@ export function TemplateEditor({
   initialBody,
   isCustom,
 }: {
-  type: MessageType;
+  type: MessageType | PgMessageType;
   title: string;
   initialBody: string;
   isCustom: boolean;
@@ -87,13 +88,16 @@ export function TemplateEditor({
       />
       <details>
         <summary className="cursor-pointer text-sm font-medium text-brand-700">
-          Preview with sample booking
+          Preview with sample{" "}
+          {type === "RENT_DUE" || type === "PAYMENT_RECEIPT" ? "resident" : "booking"}
         </summary>
         <pre
           className="mt-2 rounded-lg bg-stone-50 p-3 font-sans text-sm whitespace-pre-wrap"
           data-testid="template-preview"
         >
-          {buildMessage(type, SAMPLE, body, "WHATSAPP")}
+          {type === "RENT_DUE" || type === "PAYMENT_RECEIPT"
+            ? buildPgMessage(type, PG_SAMPLE, body, "WHATSAPP")
+            : buildMessage(type, SAMPLE, body, "WHATSAPP")}
         </pre>
       </details>
       <div className="flex flex-wrap gap-2">

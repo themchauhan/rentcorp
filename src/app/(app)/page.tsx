@@ -13,6 +13,7 @@ import { amountDueForStoredBooking, estimateStoredBooking } from "@/lib/bookings
 import { addDays, formatDate, todayIST } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
+import { PgHome } from "./pg-home";
 
 const UPCOMING_DAYS = 3;
 
@@ -43,6 +44,7 @@ function lastMessagedLabel(openedAt: string | undefined, today: string) {
 
 export default async function HomePage() {
   const profile = await requireTenantMember();
+  if (profile.tenant.business_type === "HOSTEL_PG") return <PgHome profile={profile} />;
   const today = todayIST();
   const supabase = await createClient();
 
@@ -103,7 +105,8 @@ export default async function HomePage() {
     : { data: [] };
   const lastMessaged = new Map<string, string>();
   for (const m of log ?? [])
-    if (!lastMessaged.has(m.rental_order_id)) lastMessaged.set(m.rental_order_id, m.opened_at);
+    if (m.rental_order_id && !lastMessaged.has(m.rental_order_id))
+      lastMessaged.set(m.rental_order_id, m.opened_at);
 
   const overdueCount = outNow.filter((r) => r.overdue > 0).length;
   const totalDue = outNow.reduce((s, r) => s + r.due.amountDue, 0);

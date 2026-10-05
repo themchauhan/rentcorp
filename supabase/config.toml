@@ -113,10 +113,10 @@ port = 55424
 # sender_name = "Admin"
 
 [storage]
-# Not used yet; disabled to keep local Docker startup light. Enable when a phase needs it.
-enabled = false
+# Phase 13: private bucket "resident-ids" (ID proof photos), created by migration.
+enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
-file_size_limit = "50MiB"
+file_size_limit = "5MiB"
 
 # Uncomment to configure local storage buckets
 # [storage.buckets.images]

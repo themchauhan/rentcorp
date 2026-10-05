@@ -18,6 +18,24 @@ messaging provider, no templates, no per-message cost.
 This is a multi-tenant SaaS: one deployment serves many independent
 tent-house businesses, each seeing only their own data.
 
+**Hostels / PGs (phase 13, 2026-10-05).** The same app also serves
+hostels and paying-guest houses. The super admin picks the business type
+when creating a business (it can't change later), and each type sees its
+own menus. A PG gets:
+
+- rooms and beds, let per bed or as a whole room
+- residents, moved in on a joining date (rent is due on that date every
+  month)
+- meal plans and a fixed monthly electricity charge, snapshotted per
+  resident
+- a deposit, notice and move-out settlement (dues − deposit + deductions
+  → refund or amount to collect)
+- maintenance complaints
+- private ID-proof photos
+- one-tap "Rent due" / "Payment receipt" messages
+
+Details: `docs/phases/phase-13-hostel-pg.md`.
+
 ## Platform
 
 - Mobile-first web app, installable as a PWA ("Add to Home Screen").

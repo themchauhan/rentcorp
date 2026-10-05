@@ -12,7 +12,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
   const raw = (await searchParams).q;
   const q = (Array.isArray(raw) ? raw[0] : raw)?.trim() || "";
 
-  const { readOnly } = await requireTenantMember();
+  const { readOnly } = await requireTenantMember({ type: "TENT_HOUSE" });
   const supabase = await createClient();
   let query = supabase
     .from("rental_customers")

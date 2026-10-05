@@ -31,6 +31,8 @@ const MESSAGE_LABEL = {
   BOOKING_CONFIRMATION: "Booking details",
   AMOUNT_DUE: "Amount due",
   RETURN_CONFIRMATION: "Final bill",
+  RENT_DUE: "Rent due",
+  PAYMENT_RECEIPT: "Payment receipt",
 } as const;
 const CHANNEL_LABEL = {
   WHATSAPP: "opened in WhatsApp",
@@ -65,7 +67,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
   const waParam = sp.wa;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const profile = await requireTenantMember();
+  const profile = await requireTenantMember({ type: "TENT_HOUSE" });
   const isOwner = profile.role === "ADMIN";
   const supabase = await createClient();
   const { data: order } = await supabase

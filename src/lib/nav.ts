@@ -1,19 +1,41 @@
+import type { BusinessType } from "@/lib/auth/access";
+
 export type NavItem = {
   href: string;
   label: string;
-  icon: "home" | "bookings" | "items" | "customers" | "more";
+  icon: "home" | "bookings" | "items" | "customers" | "more" | "rooms" | "complaints";
   /** Other sections that live under this tab (highlight it there too). */
   also?: string[];
 };
 
-// Placeholder destinations only — each screen is built in its own phase.
+const MORE: NavItem = {
+  href: "/more",
+  label: "More",
+  icon: "more",
+  also: ["/reports", "/team", "/settings"],
+};
+
+/** Tent house tabs (the original product). */
 export const navItems: NavItem[] = [
   { href: "/", label: "Home", icon: "home" },
   { href: "/bookings", label: "Bookings", icon: "bookings" },
   { href: "/items", label: "Items", icon: "items" },
   { href: "/customers", label: "Customers", icon: "customers" },
-  { href: "/more", label: "More", icon: "more", also: ["/reports", "/team", "/settings"] },
+  MORE,
 ];
+
+/** Hostel / PG tabs. */
+export const pgNavItems: NavItem[] = [
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/rooms", label: "Rooms", icon: "rooms" },
+  { href: "/residents", label: "Residents", icon: "customers" },
+  { href: "/complaints", label: "Complaints", icon: "complaints" },
+  MORE,
+];
+
+export function navItemsFor(type: BusinessType): NavItem[] {
+  return type === "HOSTEL_PG" ? pgNavItems : navItems;
+}
 
 /**
  * Whether a nav link should be highlighted for the current path.

@@ -57,6 +57,31 @@ export function CreateBusinessForm() {
           error={state.fieldErrors?.ownerMobile}
           required
         />
+        <fieldset>
+          <legend className="block text-sm font-medium text-stone-700">Type of business</legend>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <label className="flex min-h-12 items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 text-base has-checked:border-brand-600 has-checked:bg-brand-50">
+              <input
+                type="radio"
+                name="businessType"
+                value="TENT_HOUSE"
+                defaultChecked
+                className="h-5 w-5 accent-brand-700"
+              />
+              Tent house
+            </label>
+            <label className="flex min-h-12 items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 text-base has-checked:border-brand-600 has-checked:bg-brand-50">
+              <input
+                type="radio"
+                name="businessType"
+                value="HOSTEL_PG"
+                className="h-5 w-5 accent-brand-700"
+              />
+              Hostel / PG
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-stone-500">Can&apos;t be changed later.</p>
+        </fieldset>
         <label className="flex min-h-11 items-center gap-3 text-base">
           <input type="checkbox" name="isTest" className="h-5 w-5 accent-brand-700" />
           Test business (can be permanently deleted later)

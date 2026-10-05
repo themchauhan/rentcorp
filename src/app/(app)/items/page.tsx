@@ -23,7 +23,7 @@ function hrefWith(current: Search, change: Partial<Search>): string {
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 export default async function ItemsPage({ searchParams }: PageProps<"/items">) {
-  const profile = await requireTenantMember();
+  const profile = await requireTenantMember({ type: "TENT_HOUSE" });
   // Owners edit the catalog; read-only businesses only view it.
   const isOwner = profile.role === "ADMIN" && !profile.readOnly;
   const raw = await searchParams;

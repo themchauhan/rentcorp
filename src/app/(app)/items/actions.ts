@@ -61,7 +61,7 @@ const toRow = (d: ItemFormValues) => ({
 });
 
 export async function createItem(_prev: ItemFormState, formData: FormData): Promise<ItemFormState> {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const values = readForm(formData);
   const result = validate(values);
   if (!result.ok) return result.state;
@@ -88,7 +88,7 @@ export async function createItem(_prev: ItemFormState, formData: FormData): Prom
 }
 
 export async function updateItem(_prev: ItemFormState, formData: FormData): Promise<ItemFormState> {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const values = readForm(formData);
   const id = z.uuid().safeParse(formData.get("itemId"));
   if (!id.success) return { values, error: "Item not found." };
@@ -133,7 +133,7 @@ export async function setItemActive(
   _prev: ItemStatusState,
   formData: FormData,
 ): Promise<ItemStatusState> {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const id = z.uuid().safeParse(formData.get("itemId"));
   if (!id.success) return { error: "Item not found." };
   const active = formData.get("active") === "true";

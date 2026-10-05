@@ -68,7 +68,7 @@ export async function createBooking(
   _prev: BookingFormState,
   formData: FormData,
 ): Promise<BookingFormState> {
-  await requireActiveTenant();
+  await requireActiveTenant({ type: "TENT_HOUSE" });
   const get = (k: string) => String(formData.get(k) ?? "").trim();
   const fieldErrors: BookingFormState["fieldErrors"] = {};
 

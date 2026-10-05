@@ -2,6 +2,7 @@
 
 export type Role = "SUPER_ADMIN" | "ADMIN" | "STAFF";
 export type TenantStatus = "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
+export type BusinessType = "TENT_HOUSE" | "HOSTEL_PG";
 
 export type TenantForAccess = {
   status: TenantStatus;

@@ -9,7 +9,7 @@ import { ItemForm } from "../item-form";
 export const metadata: Metadata = { title: "Add item" };
 
 export default async function NewItemPage() {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const categories = await categoryOptions(await createClient());
 
   return (

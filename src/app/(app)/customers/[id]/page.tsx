@@ -15,7 +15,7 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const { readOnly, tenant } = await requireTenantMember();
+  const { readOnly, tenant } = await requireTenantMember({ type: "TENT_HOUSE" });
   const supabase = await createClient();
   const { data: c } = await supabase
     .from("rental_customers")

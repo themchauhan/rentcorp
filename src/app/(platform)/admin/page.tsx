@@ -23,7 +23,7 @@ export default async function PlatformAdminPage({ searchParams }: PageProps<"/ad
   const { data: tenants, error } = await supabase
     .from("tenants")
     .select(
-      "id, name, status, plan, is_test, trial_ends_at, subscription_ends_at, owners:profiles (name, mobile, role)",
+      "id, name, status, plan, is_test, business_type, trial_ends_at, subscription_ends_at, owners:profiles (name, mobile, role)",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error("Couldn't load businesses");
@@ -94,6 +94,11 @@ export default async function PlatformAdminPage({ searchParams }: PageProps<"/ad
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-semibold">
                     {t.name}
+                    {t.business_type === "HOSTEL_PG" && (
+                      <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">
+                        PG
+                      </span>
+                    )}
                     {t.is_test && (
                       <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-800">
                         TEST

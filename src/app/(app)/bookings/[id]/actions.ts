@@ -35,7 +35,7 @@ const returnItems = z
   .min(1);
 
 export async function recordReturn(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireActiveTenant();
+  await requireActiveTenant({ type: "TENT_HOUSE" });
   const orderId = orderIdOf(fd);
   if (!orderId.success) return { error: "Booking not found." };
   const returnedOn = String(fd.get("returnedOn") ?? "");
@@ -73,7 +73,7 @@ export async function recordReturn(_prev: ActionState, fd: FormData): Promise<Ac
 const MODES = ["CASH", "UPI", "CARD", "OTHER"] as const;
 
 export async function recordPayment(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireActiveTenant();
+  await requireActiveTenant({ type: "TENT_HOUSE" });
   const orderId = orderIdOf(fd);
   if (!orderId.success) return { error: "Booking not found." };
   const amount = parseRupeesToPaise(String(fd.get("amount") ?? ""));
@@ -106,7 +106,7 @@ export async function recordPayment(_prev: ActionState, fd: FormData): Promise<A
 }
 
 export async function reversePayment(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const paymentId = z.uuid().safeParse(fd.get("paymentId"));
   if (!paymentId.success) return { error: "Payment not found." };
   const reason = String(fd.get("reason") ?? "").trim();
@@ -149,7 +149,7 @@ export async function reversePayment(_prev: ActionState, fd: FormData): Promise<
 }
 
 export async function updateDiscount(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireActiveTenant();
+  await requireActiveTenant({ type: "TENT_HOUSE" });
   const orderId = orderIdOf(fd);
   if (!orderId.success) return { error: "Booking not found." };
   const type = z.enum(["NONE", "FLAT", "PERCENT"]).safeParse(fd.get("discountType"));
@@ -202,7 +202,7 @@ export async function updateDiscount(_prev: ActionState, fd: FormData): Promise<
 }
 
 export async function closeBooking(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireActiveTenant();
+  await requireActiveTenant({ type: "TENT_HOUSE" });
   const orderId = orderIdOf(fd);
   if (!orderId.success) return { error: "Booking not found." };
   const supabase = await createClient();
@@ -214,7 +214,7 @@ export async function closeBooking(_prev: ActionState, fd: FormData): Promise<Ac
 }
 
 export async function cancelBooking(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  await requireTenantAdmin();
+  await requireTenantAdmin({ type: "TENT_HOUSE" });
   const orderId = orderIdOf(fd);
   if (!orderId.success) return { error: "Booking not found." };
   const reason = String(fd.get("reason") ?? "").trim();

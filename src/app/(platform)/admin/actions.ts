@@ -64,6 +64,8 @@ export async function createBusiness(
     };
   }
 
+  const businessType = formData.get("businessType") === "HOSTEL_PG" ? "HOSTEL_PG" : "TENT_HOUSE";
+
   // Tenant + owner profile are created in one transaction.
   const { data: tenantId, error } = await createAdminClient().rpc("provision_tenant_with_owner", {
     p_tenant_name: businessName.data,
@@ -72,6 +74,7 @@ export async function createBusiness(
     p_owner_mobile: ownerMobile,
     ...(businessPhone ? { p_tenant_phone: businessPhone } : {}),
     p_is_test: formData.get("isTest") === "on",
+    p_business_type: businessType,
   });
   if (error || !tenantId) {
     await removeUnprovisionedAuthUser(created.userId);
@@ -88,6 +91,7 @@ export async function createBusiness(
       owner_id: created.userId,
       owner_mobile: ownerMobile,
       is_test: formData.get("isTest") === "on",
+      business_type: businessType,
     },
     { tenantId },
   );

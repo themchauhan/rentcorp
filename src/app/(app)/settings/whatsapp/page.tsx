@@ -21,10 +21,12 @@ const TYPE = {
   BOOKING_CONFIRMATION: "Booking details",
   AMOUNT_DUE: "Amount due",
   RETURN_CONFIRMATION: "Final bill",
+  RENT_DUE: "Rent due",
+  PAYMENT_RECEIPT: "Payment receipt",
 } as const;
 
 export default async function WhatsAppSettingsPage() {
-  const owner = await requireTenantAdmin({ write: false });
+  const owner = await requireTenantAdmin({ write: false, type: "TENT_HOUSE" });
   if (!owner.tenant.whatsapp_addon) {
     return (
       <section className="max-w-2xl space-y-4">

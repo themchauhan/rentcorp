@@ -11,6 +11,9 @@ export const USERS = {
   adminB: "9000000201",
   staffB: "9000000202",
   adminSuspendedC: "9000000301",
+  pgOwnerD: "9000000401",
+  pgStaffD: "9000000402",
+  pgOwnerE: "9000000501",
 } as const;
 
 export async function fillLogin(page: Page, mobile: string, password = PASSWORD) {
@@ -39,6 +42,12 @@ export const IDS = {
   itemB_foldingChair: "b1000000-0000-4000-8000-000000000001",
   customerA_ravi: "a2000000-0000-4000-8000-000000000001",
   bookingA_seed: "a3000000-0000-4000-8000-000000000001",
+  // Hostel / PG (phase 13)
+  stayD_aarav: "d5000000-0000-4000-8000-000000000001",
+  stayD_kabir: "d5000000-0000-4000-8000-000000000002",
+  stayE_esha: "e5000000-0000-4000-8000-000000000001",
+  roomD_101: "d1000000-0000-4000-8000-000000000001",
+  complaintD_wifi: "d7000000-0000-4000-8000-000000000001",
 } as const;
 
 /** Today in IST plus `days`, as YYYY-MM-DD. */

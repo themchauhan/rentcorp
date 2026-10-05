@@ -5,12 +5,13 @@ import { z } from "zod";
 import { logAudit } from "@/lib/audit";
 import { requireTenantAdmin } from "@/lib/auth/guards";
 import { DEFAULT_TEMPLATES } from "@/lib/messages";
+import { PG_DEFAULT_TEMPLATES, PG_MESSAGE_TYPES, type PgMessageType } from "@/lib/pg-messages";
 import { createClient } from "@/lib/supabase/server";
 
 export type TemplateState = { error?: string; saved?: string; body?: string };
 
 const schema = z.object({
-  type: z.enum(["BOOKING_CONFIRMATION", "AMOUNT_DUE", "RETURN_CONFIRMATION"]),
+  type: z.enum(["BOOKING_CONFIRMATION", "AMOUNT_DUE", "RETURN_CONFIRMATION", ...PG_MESSAGE_TYPES]),
   body: z
     .string()
     .trim()
@@ -22,12 +23,20 @@ export async function saveTemplate(
   _prev: TemplateState,
   formData: FormData,
 ): Promise<TemplateState> {
-  await requireTenantAdmin();
+  const owner = await requireTenantAdmin();
   const reset = formData.get("reset") === "1";
   const type = String(formData.get("type") ?? "");
+  const isPgType = (PG_MESSAGE_TYPES as string[]).includes(type);
+  // Each kind of business edits only its own messages.
+  if (isPgType !== (owner.tenant.business_type === "HOSTEL_PG")) {
+    return { error: "Invalid message" };
+  }
+  const defaults = isPgType
+    ? PG_DEFAULT_TEMPLATES[type as PgMessageType]
+    : DEFAULT_TEMPLATES[type as keyof typeof DEFAULT_TEMPLATES];
   const parsed = schema.safeParse({
     type,
-    body: reset ? DEFAULT_TEMPLATES[type as keyof typeof DEFAULT_TEMPLATES] : formData.get("body"),
+    body: reset ? defaults : formData.get("body"),
   });
   if (!parsed.success) {
     return {

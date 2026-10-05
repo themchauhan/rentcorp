@@ -26,7 +26,8 @@ export async function loadTemplates(
 ): Promise<Record<MessageType, string>> {
   const { data } = await supabase.from("message_templates").select("message_type, body");
   const templates = { ...DEFAULT_TEMPLATES };
-  for (const row of data ?? []) templates[row.message_type] = row.body;
+  for (const row of data ?? [])
+    if (row.message_type in templates) templates[row.message_type as MessageType] = row.body;
   return templates;
 }
 

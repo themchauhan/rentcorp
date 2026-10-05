@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore, useTransition } from "react";
 import { sendAutomatically } from "@/app/actions/whatsapp";
 import { detectPlatform, smsLink, whatsappLink, type Platform } from "@/lib/message-links";
 import type { MessageType } from "@/lib/messages";
+import type { PgMessageType } from "@/lib/pg-messages";
 
 type Channel = "WHATSAPP" | "SMS" | "COPY";
 
@@ -23,6 +24,7 @@ const CHANNEL_DONE: Record<Channel, string> = {
  */
 export function SendPanel({
   orderId,
+  stayId,
   type,
   title,
   whatsappText,
@@ -32,8 +34,10 @@ export function SendPanel({
   preferredChannel,
   autoSend,
 }: {
-  orderId: string;
-  type: MessageType;
+  /** The booking (tent house) or the resident's stay (hostel/PG). */
+  orderId?: string;
+  stayId?: string;
+  type: MessageType | PgMessageType;
   title: string;
   whatsappText: string;
   smsText: string;
@@ -59,6 +63,7 @@ export function SendPanel({
 
   function sendAuto() {
     startSending(async () => {
+      if (!orderId || type === "RENT_DUE" || type === "PAYMENT_RECEIPT") return;
       const r = await sendAutomatically(orderId, type);
       setAutoResult(
         r.ok
@@ -74,7 +79,9 @@ export function SendPanel({
     void fetch("/api/message-log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, type, channel, body }),
+      body: JSON.stringify(
+        stayId ? { stayId, type, channel, body } : { orderId, type, channel, body },
+      ),
       keepalive: true,
     })
       .then((r) => {

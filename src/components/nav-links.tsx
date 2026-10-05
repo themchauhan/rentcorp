@@ -2,7 +2,8 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { isNavItemActive, navItems, type NavItem } from "@/lib/nav";
+import type { BusinessType } from "@/lib/auth/access";
+import { isNavItemActive, navItemsFor, type NavItem } from "@/lib/nav";
 import { NavIcon } from "./nav-icon";
 import { Spinner } from "./spinner";
 
@@ -13,8 +14,9 @@ function TabIcon({ name }: { name: NavItem["icon"] }) {
 }
 
 /** Fixed bottom tab bar, shown on phones only. */
-export function BottomNav() {
+export function BottomNav({ businessType }: { businessType: BusinessType }) {
   const pathname = usePathname();
+  const navItems = navItemsFor(businessType);
   return (
     <nav
       aria-label="Main"
@@ -44,8 +46,9 @@ export function BottomNav() {
 }
 
 /** Sidebar, shown on tablets and desktops. */
-export function SideNav() {
+export function SideNav({ businessType }: { businessType: BusinessType }) {
   const pathname = usePathname();
+  const navItems = navItemsFor(businessType);
   return (
     <nav aria-label="Main" className="hidden md:block">
       <ul className="space-y-1">

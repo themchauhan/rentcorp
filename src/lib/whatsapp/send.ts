@@ -36,7 +36,7 @@ const BLOCKER_TEXT: Record<Blocker, string> = {
 /**
  * Sends one booking message through a business's own WhatsApp number and
  * logs it (server-side). No session: callers must have authorised the
- * business already — the button via requireActiveTenant() + RLS, the 9 PM
+ * business already — the button via requireActiveTenant({ type: "TENT_HOUSE" }) + RLS, the 9 PM
  * job by only ever passing a booking of the business it is processing.
  * With `reminderDate`, the log row is claimed first so a booking can get
  * at most one evening reminder per day.
@@ -161,7 +161,7 @@ export async function sendBookingViaApi(
   orderId: string,
   type: MessageType,
 ): Promise<ApiSendResult> {
-  const member = await requireActiveTenant();
+  const member = await requireActiveTenant({ type: "TENT_HOUSE" });
   const supabase = await createClient();
   const { data: order } = await supabase
     .from("rental_orders")
@@ -185,7 +185,7 @@ export async function sendBookingViaApi(
  * customer agreed. Returns null when no attempt was made.
  */
 export async function autoSendBookingDetails(orderId: string): Promise<ApiSendResult | null> {
-  const member = await requireActiveTenant();
+  const member = await requireActiveTenant({ type: "TENT_HOUSE" });
   if (!member.tenant.whatsapp_addon) return null;
   const supabase = await createClient();
   const [{ data: connection }, { data: settings }] = await Promise.all([

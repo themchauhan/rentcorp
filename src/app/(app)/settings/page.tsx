@@ -11,7 +11,8 @@ const linkClass =
 
 export default async function SettingsPage() {
   const owner = await requireTenantAdmin({ write: false });
-  const addon = owner.tenant.whatsapp_addon;
+  const isPg = owner.tenant.business_type === "HOSTEL_PG";
+  const addon = owner.tenant.whatsapp_addon && !isPg;
   const { data: whatsapp } = addon
     ? await (
         await createClient()
@@ -26,6 +27,11 @@ export default async function SettingsPage() {
         <BackLink href="/more" label="More" />
         <h1 className="text-2xl font-bold text-stone-900">Business settings</h1>
       </div>
+      {isPg && (
+        <Link href="/settings/hostel" className={linkClass}>
+          Hostel setup (meal plans, deposit, notice) <span aria-hidden="true">›</span>
+        </Link>
+      )}
       <Link href="/settings/messages" className={linkClass}>
         Message wording <span aria-hidden="true">›</span>
       </Link>

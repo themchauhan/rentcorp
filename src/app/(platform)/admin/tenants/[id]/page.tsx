@@ -38,7 +38,7 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
   const { data: t } = await supabase
     .from("tenants")
     .select(
-      "id, name, phone, status, plan, is_test, whatsapp_addon, trial_ends_at, subscription_ends_at, created_at, owners:profiles (id, name, mobile, role, status)",
+      "id, name, phone, status, plan, is_test, whatsapp_addon, business_type, trial_ends_at, subscription_ends_at, created_at, owners:profiles (id, name, mobile, role, status)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -77,6 +77,9 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
             </span>
           )}
         </h1>
+        <p className="text-sm text-stone-600" data-testid="business-type">
+          {t.business_type === "HOSTEL_PG" ? "Hostel / PG" : "Tent house"}
+        </p>
         <p
           className={`mt-1 text-sm font-medium ${access.ok ? "text-green-700" : "text-red-700"}`}
           data-testid="tenant-access"
@@ -154,21 +157,23 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
           </div>
         ))}
       </div>
-      <div className={card}>
-        <h2 className="mb-1 font-semibold">WhatsApp automation (add-on)</h2>
-        <p className="mb-3 text-sm text-stone-600">
-          Optional extra. Steps for you and the client: docs/whatsapp/client-onboarding.md.
-        </p>
-        <WhatsAppAddonForm tenantId={t.id} on={t.whatsapp_addon} />
-        {t.whatsapp_addon && (
-          <div className="mt-5 border-t border-stone-200 pt-4">
-            <p className="mb-3 text-sm text-stone-600">
-              The business’s own WhatsApp Business number, from Meta’s WhatsApp Manager.
-            </p>
-            <WhatsAppConnectionForm tenantId={t.id} connection={whatsapp} />
-          </div>
-        )}
-      </div>
+      {t.business_type === "TENT_HOUSE" && (
+        <div className={card}>
+          <h2 className="mb-1 font-semibold">WhatsApp automation (add-on)</h2>
+          <p className="mb-3 text-sm text-stone-600">
+            Optional extra. Steps for you and the client: docs/whatsapp/client-onboarding.md.
+          </p>
+          <WhatsAppAddonForm tenantId={t.id} on={t.whatsapp_addon} />
+          {t.whatsapp_addon && (
+            <div className="mt-5 border-t border-stone-200 pt-4">
+              <p className="mb-3 text-sm text-stone-600">
+                The business’s own WhatsApp Business number, from Meta’s WhatsApp Manager.
+              </p>
+              <WhatsAppConnectionForm tenantId={t.id} connection={whatsapp} />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={card}>
         <h2 className="mb-3 font-semibold">Test business</h2>

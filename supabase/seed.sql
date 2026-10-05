@@ -14,12 +14,21 @@
 -- | 9000000201 | Admin (owner)                     | Demo Tent House B  |
 -- | 9000000202 | Staff                             | Demo Tent House B  |
 -- | 9000000301 | Admin of a SUSPENDED tenant       | Demo Tent House C  |
+-- | 9000000401 | Admin (owner)                     | Demo PG House (hostel/PG) |
+-- | 9000000402 | Staff                             | Demo PG House (hostel/PG) |
+-- | 9000000501 | Admin (owner)                     | Demo PG E (hostel/PG)     |
 
 insert into public.tenants (id, name, phone, email, status, plan, trial_ends_at, subscription_ends_at)
 values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Demo Tent House A', '9000000100', 'a@example.test', 'ACTIVE', 'STANDARD', null, now() + interval '1 year'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Demo Tent House B', '9000000200', 'b@example.test', 'ACTIVE', 'STANDARD', null, now() + interval '1 year'),
   ('cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Demo Tent House C', '9000000300', 'c@example.test', 'SUSPENDED', 'STANDARD', null, now() - interval '10 days');
+
+-- Hostel / PG businesses (phase 13).
+insert into public.tenants (id, name, phone, email, status, plan, trial_ends_at, subscription_ends_at, business_type)
+values
+  ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo PG House', '9000000400', 'd@example.test', 'ACTIVE', 'STANDARD', null, now() + interval '1 year', 'HOSTEL_PG'),
+  ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'Demo PG E', '9000000500', 'e@example.test', 'ACTIVE', 'STANDARD', null, now() + interval '1 year', 'HOSTEL_PG');
 
 -- Auth users. Token columns must be '' (not NULL) for Supabase Auth.
 with seed_users (id, mobile) as (
@@ -31,7 +40,10 @@ with seed_users (id, mobile) as (
     ('a0000000-0000-4000-8000-000000000004'::uuid, '9000000104'),
     ('b0000000-0000-4000-8000-000000000001'::uuid, '9000000201'),
     ('b0000000-0000-4000-8000-000000000002'::uuid, '9000000202'),
-    ('c0000000-0000-4000-8000-000000000001'::uuid, '9000000301')
+    ('c0000000-0000-4000-8000-000000000001'::uuid, '9000000301'),
+    ('d0000000-0000-4000-8000-000000000001'::uuid, '9000000401'),
+    ('d0000000-0000-4000-8000-000000000002'::uuid, '9000000402'),
+    ('e0000000-0000-4000-8000-000000000001'::uuid, '9000000501')
 )
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -64,7 +76,10 @@ values
   ('a0000000-0000-4000-8000-000000000004', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Demo Staff A2', '9000000104', 'STAFF', 'ACTIVE'),
   ('b0000000-0000-4000-8000-000000000001', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Demo Owner B', '9000000201', 'ADMIN', 'ACTIVE'),
   ('b0000000-0000-4000-8000-000000000002', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Demo Staff B', '9000000202', 'STAFF', 'ACTIVE'),
-  ('c0000000-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Demo Owner C', '9000000301', 'ADMIN', 'ACTIVE');
+  ('c0000000-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Demo Owner C', '9000000301', 'ADMIN', 'ACTIVE'),
+  ('d0000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo PG Owner D', '9000000401', 'ADMIN', 'ACTIVE'),
+  ('d0000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo PG Staff D', '9000000402', 'STAFF', 'ACTIVE'),
+  ('e0000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'Demo PG Owner E', '9000000501', 'ADMIN', 'ACTIVE');
 
 -- One audit row per tenant so cross-tenant read tests have something to (not) see.
 insert into public.audit_logs (tenant_id, user_id, action, target_type, target_id)
@@ -118,3 +133,117 @@ update public.rental_customers set whatsapp_opt_in = true where id = 'a2000000-0
 
 -- Tenant A has the WhatsApp automation add-on (used by the e2e suite).
 update public.tenants set whatsapp_addon = true where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+-- ---------------------------------------------------------------------------
+-- Hostel / PG (phase 13). Dummy data only.
+-- ---------------------------------------------------------------------------
+insert into public.pg_settings (tenant_id, electricity_paise, deposit_paise, notice_days)
+values
+  ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 50000, 1000000, 30),
+  ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 0, 500000, 15);
+
+-- Rent in paise: 600000 = ₹6,000 a month.
+insert into public.pg_rooms (id, tenant_id, name, floor, rent_mode, rent_paise, under_maintenance, notes)
+values
+  ('d1000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', '101', 'Ground', 'PER_BED', 600000, false, null),
+  ('d1000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', '102', 'Ground', 'PER_BED', 750000, false, 'Attached bathroom'),
+  ('d1000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', '201', 'First', 'PER_ROOM', 1400000, false, 'Whole room, AC'),
+  ('d1000000-0000-4000-8000-000000000004', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', '202', 'First', 'PER_BED', 600000, true, 'Repainting'),
+  ('e1000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'E1', null, 'PER_BED', 500000, false, null);
+
+insert into public.pg_beds (id, tenant_id, room_id, label)
+values
+  ('d2000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000001', 'A'),
+  ('d2000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000001', 'B'),
+  ('d2000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000001', 'C'),
+  ('d2000000-0000-4000-8000-000000000004', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000002', 'A'),
+  ('d2000000-0000-4000-8000-000000000005', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000002', 'B'),
+  ('d2000000-0000-4000-8000-000000000006', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000003', 'A'),
+  ('d2000000-0000-4000-8000-000000000007', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000003', 'B'),
+  ('d2000000-0000-4000-8000-000000000008', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000004', 'A'),
+  ('d2000000-0000-4000-8000-000000000009', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000004', 'B'),
+  ('e2000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e1000000-0000-4000-8000-000000000001', 'A'),
+  ('e2000000-0000-4000-8000-000000000002', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e1000000-0000-4000-8000-000000000001', 'B');
+
+insert into public.pg_meal_plans (id, tenant_id, name, monthly_paise)
+values
+  ('d3000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Breakfast + Dinner', 250000),
+  ('d3000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'All meals', 350000),
+  ('e3000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'All meals', 300000);
+
+-- Residents (dummy names, obviously fake 91111114xx / 91111115xx numbers).
+insert into public.rental_customers (id, tenant_id, name, mobile, whatsapp_number, preferred_channel, address)
+values
+  ('d4000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo Resident Aarav', '9111111401', '9111111401', 'WHATSAPP', null),
+  ('d4000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo Resident Kabir', '9111111402', '9111111402', 'WHATSAPP', null),
+  ('d4000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo Resident Meera', '9111111403', null, 'SMS', null),
+  ('d4000000-0000-4000-8000-000000000004', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Demo Resident Rohan', '9111111404', '9111111404', 'WHATSAPP', null),
+  ('e4000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'Demo Resident Esha', '9111111501', '9111111501', 'WHATSAPP', null);
+
+insert into public.pg_resident_details (tenant_id, customer_id, emergency_name, emergency_mobile, occupation, id_type)
+values
+  ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd4000000-0000-4000-8000-000000000001', 'Demo Parent Aarav', '9111111491', 'Student, Demo College', 'COLLEGE_ID'),
+  ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd4000000-0000-4000-8000-000000000002', null, null, 'Software engineer', 'AADHAAR');
+
+-- Stays (dates relative to today, IST):
+--  Aarav: 101-A, joined 40 days ago, fully paid.
+--  Kabir: 101-B, joined 75 days ago, paid the first month only (overdue).
+--  Meera: whole room 201, joined exactly 1 month ago: rent due today.
+--  Rohan: 102-A, joined 100 days ago, on notice, paid up.
+--  Esha (PG E): E1-A, joined 20 days ago, nothing paid.
+insert into public.pg_stays (id, tenant_id, customer_id, room_id, bed_id, start_date, status, deposit_paise, notice_given_on, planned_move_out, created_by)
+values
+  ('d5000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd4000000-0000-4000-8000-000000000001',
+   'd1000000-0000-4000-8000-000000000001', 'd2000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Kolkata')::date - 40, 'ACTIVE', 1000000, null, null, 'd0000000-0000-4000-8000-000000000001'),
+  ('d5000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd4000000-0000-4000-8000-000000000002',
+   'd1000000-0000-4000-8000-000000000001', 'd2000000-0000-4000-8000-000000000002',
+   (now() at time zone 'Asia/Kolkata')::date - 75, 'ACTIVE', 1000000, null, null, 'd0000000-0000-4000-8000-000000000001'),
+  ('d5000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd4000000-0000-4000-8000-000000000003',
+   'd1000000-0000-4000-8000-000000000003', null,
+   ((now() at time zone 'Asia/Kolkata')::date - interval '1 month')::date, 'ACTIVE', 2000000, null, null, 'd0000000-0000-4000-8000-000000000001'),
+  ('d5000000-0000-4000-8000-000000000004', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd4000000-0000-4000-8000-000000000004',
+   'd1000000-0000-4000-8000-000000000002', 'd2000000-0000-4000-8000-000000000004',
+   (now() at time zone 'Asia/Kolkata')::date - 100, 'NOTICE', 1000000,
+   (now() at time zone 'Asia/Kolkata')::date - 10, (now() at time zone 'Asia/Kolkata')::date + 5, 'd0000000-0000-4000-8000-000000000001'),
+  ('e5000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e4000000-0000-4000-8000-000000000001',
+   'e1000000-0000-4000-8000-000000000001', 'e2000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Kolkata')::date - 20, 'ACTIVE', 500000, null, null, 'e0000000-0000-4000-8000-000000000001');
+
+-- Rates copied at move-in: rent + meal plan + electricity (₹500).
+insert into public.pg_stay_rates (tenant_id, stay_id, effective_from, rent_paise, meal_plan_id, meal_plan_name, meal_paise, electricity_paise)
+select s.tenant_id, s.id, s.start_date, v.rent, v.plan, p.name, coalesce(p.monthly_paise, 0), v.elec
+from (values
+  ('d5000000-0000-4000-8000-000000000001'::uuid, 600000, 'd3000000-0000-4000-8000-000000000001'::uuid, 50000),
+  ('d5000000-0000-4000-8000-000000000002'::uuid, 600000, null::uuid, 50000),
+  ('d5000000-0000-4000-8000-000000000003'::uuid, 1400000, 'd3000000-0000-4000-8000-000000000002'::uuid, 50000),
+  ('d5000000-0000-4000-8000-000000000004'::uuid, 750000, null::uuid, 50000),
+  ('e5000000-0000-4000-8000-000000000001'::uuid, 500000, 'e3000000-0000-4000-8000-000000000001'::uuid, 0)
+) as v (stay, rent, plan, elec)
+join public.pg_stays s on s.id = v.stay
+left join public.pg_meal_plans p on p.id = v.plan;
+
+-- Deposits taken, and rent paid (amounts computed from the rates above).
+insert into public.pg_payments (id, tenant_id, stay_id, purpose, amount_paise, mode, received_by, received_at)
+values
+  ('d6000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000001', 'DEPOSIT', 1000000, 'UPI', 'd0000000-0000-4000-8000-000000000001', now() - interval '40 days'),
+  ('d6000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000002', 'DEPOSIT', 1000000, 'CASH', 'd0000000-0000-4000-8000-000000000001', now() - interval '75 days'),
+  ('d6000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000004', 'DEPOSIT', 1000000, 'UPI', 'd0000000-0000-4000-8000-000000000001', now() - interval '100 days'),
+  ('d6000000-0000-4000-8000-000000000004', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000001', 'RENT',
+   private.pg_stay_balance_paise('d5000000-0000-4000-8000-000000000001', (now() at time zone 'Asia/Kolkata')::date), 'UPI', 'd0000000-0000-4000-8000-000000000002', now() - interval '9 days'),
+  ('d6000000-0000-4000-8000-000000000005', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000002', 'RENT', 650000, 'CASH', 'd0000000-0000-4000-8000-000000000002', now() - interval '74 days'),
+  ('d6000000-0000-4000-8000-000000000006', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000003', 'RENT', 1800000, 'UPI', 'd0000000-0000-4000-8000-000000000001', now() - interval '30 days'),
+  ('d6000000-0000-4000-8000-000000000007', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000004', 'RENT',
+   private.pg_stay_balance_paise('d5000000-0000-4000-8000-000000000004', (now() at time zone 'Asia/Kolkata')::date), 'CARD', 'd0000000-0000-4000-8000-000000000001', now() - interval '8 days');
+
+insert into public.pg_complaints (id, tenant_id, room_id, stay_id, category, priority, description, status, resolution_note)
+values
+  ('d7000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', null, 'd5000000-0000-4000-8000-000000000002', 'WIFI', 'URGENT', 'Wi-Fi not working in room 101', 'OPEN', null),
+  ('d7000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000002', null, 'PLUMBING', 'NORMAL', 'Bathroom tap leaking', 'IN_PROGRESS', null),
+  ('d7000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd1000000-0000-4000-8000-000000000003', null, 'ELECTRICAL', 'NORMAL', 'Tube light not working', 'RESOLVED', 'Replaced the tube light'),
+  ('e7000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e1000000-0000-4000-8000-000000000001', null, 'CLEANING', 'NORMAL', 'Room not cleaned', 'OPEN', null);
+
+insert into public.audit_logs (tenant_id, user_id, action, target_type, target_id)
+values
+  ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd0000000-0000-4000-8000-000000000001', 'seed.created', 'tenant', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'),
+  ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e0000000-0000-4000-8000-000000000001', 'seed.created', 'tenant', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee');

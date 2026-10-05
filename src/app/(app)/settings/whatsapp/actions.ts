@@ -26,7 +26,7 @@ const ADDON_OFF: ConnectionResult = {
 
 /** Owner of a business that has the WhatsApp add-on, or null. */
 async function addonOwner() {
-  const owner = await requireTenantAdmin();
+  const owner = await requireTenantAdmin({ type: "TENT_HOUSE" });
   return owner.tenant.whatsapp_addon ? owner : null;
 }
 

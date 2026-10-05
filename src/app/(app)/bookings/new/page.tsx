@@ -11,7 +11,7 @@ export default async function NewBookingPage({ searchParams }: PageProps<"/booki
   const raw = (await searchParams).customer;
   const initialCustomerId = Array.isArray(raw) ? raw[0] : raw;
 
-  const member = await requireActiveTenant();
+  const member = await requireActiveTenant({ type: "TENT_HOUSE" });
   const supabase = await createClient();
   const [{ data: items }, { data: customers }] = await Promise.all([
     supabase

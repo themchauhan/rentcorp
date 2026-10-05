@@ -105,8 +105,8 @@ select throws_ok('select * from public.audit_logs', '42501', null, 'anon cannot 
 
 -- ---------------------------------------------------------------- platform admin
 select tests.act_as(:super);
-select is((select count(*)::int from public.tenants), 3, 'platform admin sees all tenants');
-select is((select count(*)::int from public.profiles), 7, 'platform admin sees all profiles');
+select is((select count(*)::int from public.tenants), 5, 'platform admin sees all tenants');
+select is((select count(*)::int from public.profiles), 10, 'platform admin sees all profiles');
 select ok((select count(distinct tenant_id) from public.audit_logs) >= 2,
   'platform admin sees audit logs of every tenant');
 

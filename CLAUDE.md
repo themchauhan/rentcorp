@@ -6,7 +6,9 @@ instinct.
 ## What this project is
 
 A multi-tenant, mobile-first web app (installable PWA) sold to
-tent-house/event-rental businesses. Staff track rented-out items; the
+tent-house/event-rental businesses and (since phase 13) hostels/PGs. Each
+business has a fixed **business type** (`TENT_HOUSE` | `HOSTEL_PG`) that
+decides its menus; a page or action for one type 404s for the other. Staff track rented-out items; the
 app builds the itemized message with rates and amount due, and staff
 send it from their own phone via WhatsApp or normal SMS with one tap.
 Businesses can also connect their own WhatsApp Business number so the
@@ -39,6 +41,9 @@ Full spec: `docs/BRIEF.md`. Phase checklists: `docs/phases/phase-N.md`
    existing booking's amount due. Amounts are always calculated by
    the app (never typed in), in integer paise. Booking-level
    discounts (flat ₹ or %) are audit-logged on every change.
+   Hostel/PG: rent, meal plan and electricity are snapshotted per stay
+   (`pg_stay_rates`); a change applies only from a future due date. Dues
+   come from `src/lib/pg-dues.ts`, mirrored in SQL.
 9. **Every message is logged.** Manual sends (Send on WhatsApp / Send
    SMS / Copy) log channel, number, exact body and amount due; the app
    can't confirm their delivery, so the UI says only "Opened in

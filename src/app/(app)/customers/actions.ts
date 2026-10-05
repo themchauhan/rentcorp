@@ -29,7 +29,7 @@ export async function createCustomer(
   _prev: CustomerFormState,
   formData: FormData,
 ): Promise<CustomerFormState> {
-  await requireActiveTenant();
+  await requireActiveTenant({ type: "TENT_HOUSE" });
   const values = readCustomerForm(formData);
   const parsed = parseCustomer(values);
   if (!parsed.ok) return { values, fieldErrors: parsed.fieldErrors };
@@ -50,7 +50,7 @@ export async function updateCustomer(
   _prev: CustomerFormState,
   formData: FormData,
 ): Promise<CustomerFormState> {
-  const member = await requireActiveTenant();
+  const member = await requireActiveTenant({ type: "TENT_HOUSE" });
   const values = readCustomerForm(formData);
   const id = z.uuid().safeParse(formData.get("customerId"));
   if (!id.success) return { values, error: "Customer not found." };

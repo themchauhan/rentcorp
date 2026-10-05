@@ -94,9 +94,10 @@ export type Database = {
           id: number;
           message_type: Database["public"]["Enums"]["message_type"];
           opened_at: string;
+          pg_stay_id: string | null;
           provider_message_id: string | null;
           reminder_date: string | null;
-          rental_order_id: string;
+          rental_order_id: string | null;
           sent_by: string | null;
           status_updated_at: string | null;
           template_name: string | null;
@@ -113,9 +114,10 @@ export type Database = {
           id?: never;
           message_type: Database["public"]["Enums"]["message_type"];
           opened_at?: string;
+          pg_stay_id?: string | null;
           provider_message_id?: string | null;
           reminder_date?: string | null;
-          rental_order_id: string;
+          rental_order_id?: string | null;
           sent_by?: string | null;
           status_updated_at?: string | null;
           template_name?: string | null;
@@ -132,9 +134,10 @@ export type Database = {
           id?: never;
           message_type?: Database["public"]["Enums"]["message_type"];
           opened_at?: string;
+          pg_stay_id?: string | null;
           provider_message_id?: string | null;
           reminder_date?: string | null;
-          rental_order_id?: string;
+          rental_order_id?: string | null;
           sent_by?: string | null;
           status_updated_at?: string | null;
           template_name?: string | null;
@@ -142,6 +145,13 @@ export type Database = {
           to_number?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "message_log_stay_fkey";
+            columns: ["tenant_id", "pg_stay_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_stays";
+            referencedColumns: ["tenant_id", "id"];
+          },
           {
             foreignKeyName: "message_log_tenant_id_fkey";
             columns: ["tenant_id"];
@@ -187,6 +197,626 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      pg_beds: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          label: string;
+          room_id: string;
+          tenant_id: string;
+          under_maintenance: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          label: string;
+          room_id: string;
+          tenant_id?: string;
+          under_maintenance?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          room_id?: string;
+          tenant_id?: string;
+          under_maintenance?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_beds_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_beds_tenant_id_room_id_fkey";
+            columns: ["tenant_id", "room_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_rooms";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      pg_complaints: {
+        Row: {
+          category: Database["public"]["Enums"]["pg_complaint_category"];
+          description: string;
+          id: string;
+          priority: Database["public"]["Enums"]["pg_complaint_priority"];
+          raised_at: string;
+          raised_by: string | null;
+          resolution_note: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          room_id: string | null;
+          status: Database["public"]["Enums"]["pg_complaint_status"];
+          stay_id: string | null;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          category: Database["public"]["Enums"]["pg_complaint_category"];
+          description: string;
+          id?: string;
+          priority?: Database["public"]["Enums"]["pg_complaint_priority"];
+          raised_at?: string;
+          raised_by?: string | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          room_id?: string | null;
+          status?: Database["public"]["Enums"]["pg_complaint_status"];
+          stay_id?: string | null;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Update: {
+          category?: Database["public"]["Enums"]["pg_complaint_category"];
+          description?: string;
+          id?: string;
+          priority?: Database["public"]["Enums"]["pg_complaint_priority"];
+          raised_at?: string;
+          raised_by?: string | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          room_id?: string | null;
+          status?: Database["public"]["Enums"]["pg_complaint_status"];
+          stay_id?: string | null;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_complaints_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_complaints_tenant_id_room_id_fkey";
+            columns: ["tenant_id", "room_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_rooms";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "pg_complaints_tenant_id_stay_id_fkey";
+            columns: ["tenant_id", "stay_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_stays";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      pg_id_documents: {
+        Row: {
+          content_type: string;
+          customer_id: string;
+          doc_type: Database["public"]["Enums"]["pg_id_type"];
+          id: string;
+          removed_at: string | null;
+          removed_by: string | null;
+          side: Database["public"]["Enums"]["pg_id_side"];
+          size_bytes: number;
+          storage_path: string;
+          tenant_id: string;
+          uploaded_at: string;
+          uploaded_by: string | null;
+        };
+        Insert: {
+          content_type: string;
+          customer_id: string;
+          doc_type: Database["public"]["Enums"]["pg_id_type"];
+          id?: string;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          side?: Database["public"]["Enums"]["pg_id_side"];
+          size_bytes: number;
+          storage_path: string;
+          tenant_id?: string;
+          uploaded_at?: string;
+          uploaded_by?: string | null;
+        };
+        Update: {
+          content_type?: string;
+          customer_id?: string;
+          doc_type?: Database["public"]["Enums"]["pg_id_type"];
+          id?: string;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          side?: Database["public"]["Enums"]["pg_id_side"];
+          size_bytes?: number;
+          storage_path?: string;
+          tenant_id?: string;
+          uploaded_at?: string;
+          uploaded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_id_documents_tenant_id_customer_id_fkey";
+            columns: ["tenant_id", "customer_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_customers";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "pg_id_documents_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pg_meal_plans: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          id: string;
+          monthly_paise: number;
+          name: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          monthly_paise: number;
+          name: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          id?: string;
+          monthly_paise?: number;
+          name?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_meal_plans_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pg_payments: {
+        Row: {
+          amount_paise: number;
+          id: string;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          mode: Database["public"]["Enums"]["payment_mode"];
+          note: string | null;
+          purpose: Database["public"]["Enums"]["pg_payment_purpose"];
+          received_at: string;
+          received_by: string | null;
+          reverses_payment_id: string | null;
+          stay_id: string;
+          tenant_id: string;
+        };
+        Insert: {
+          amount_paise: number;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          mode: Database["public"]["Enums"]["payment_mode"];
+          note?: string | null;
+          purpose: Database["public"]["Enums"]["pg_payment_purpose"];
+          received_at?: string;
+          received_by?: string | null;
+          reverses_payment_id?: string | null;
+          stay_id: string;
+          tenant_id?: string;
+        };
+        Update: {
+          amount_paise?: number;
+          id?: string;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          mode?: Database["public"]["Enums"]["payment_mode"];
+          note?: string | null;
+          purpose?: Database["public"]["Enums"]["pg_payment_purpose"];
+          received_at?: string;
+          received_by?: string | null;
+          reverses_payment_id?: string | null;
+          stay_id?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_payments_reverses_payment_id_fkey";
+            columns: ["reverses_payment_id"];
+            isOneToOne: true;
+            referencedRelation: "pg_payments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_payments_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_payments_tenant_id_stay_id_fkey";
+            columns: ["tenant_id", "stay_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_stays";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      pg_resident_details: {
+        Row: {
+          customer_id: string;
+          emergency_mobile: string | null;
+          emergency_name: string | null;
+          id_type: Database["public"]["Enums"]["pg_id_type"] | null;
+          occupation: string | null;
+          permanent_address: string | null;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          customer_id: string;
+          emergency_mobile?: string | null;
+          emergency_name?: string | null;
+          id_type?: Database["public"]["Enums"]["pg_id_type"] | null;
+          occupation?: string | null;
+          permanent_address?: string | null;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Update: {
+          customer_id?: string;
+          emergency_mobile?: string | null;
+          emergency_name?: string | null;
+          id_type?: Database["public"]["Enums"]["pg_id_type"] | null;
+          occupation?: string | null;
+          permanent_address?: string | null;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_resident_details_tenant_id_customer_id_fkey";
+            columns: ["tenant_id", "customer_id"];
+            isOneToOne: true;
+            referencedRelation: "rental_customers";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "pg_resident_details_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pg_rooms: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string | null;
+          floor: string | null;
+          id: string;
+          name: string;
+          notes: string | null;
+          rent_mode: Database["public"]["Enums"]["pg_rent_mode"];
+          rent_paise: number;
+          tenant_id: string;
+          under_maintenance: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          floor?: string | null;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          rent_mode: Database["public"]["Enums"]["pg_rent_mode"];
+          rent_paise: number;
+          tenant_id?: string;
+          under_maintenance?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          floor?: string | null;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          rent_mode?: Database["public"]["Enums"]["pg_rent_mode"];
+          rent_paise?: number;
+          tenant_id?: string;
+          under_maintenance?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_rooms_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pg_settings: {
+        Row: {
+          deposit_paise: number;
+          electricity_paise: number;
+          notice_days: number;
+          tenant_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          deposit_paise?: number;
+          electricity_paise?: number;
+          notice_days?: number;
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          deposit_paise?: number;
+          electricity_paise?: number;
+          notice_days?: number;
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_settings_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      pg_stay_adjustments: {
+        Row: {
+          amount_paise: number;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          kind: Database["public"]["Enums"]["pg_adjustment_kind"];
+          on_date: string;
+          reason: string;
+          stay_id: string;
+          tenant_id: string;
+        };
+        Insert: {
+          amount_paise: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["pg_adjustment_kind"];
+          on_date: string;
+          reason: string;
+          stay_id: string;
+          tenant_id: string;
+        };
+        Update: {
+          amount_paise?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["pg_adjustment_kind"];
+          on_date?: string;
+          reason?: string;
+          stay_id?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_stay_adjustments_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_stay_adjustments_tenant_id_stay_id_fkey";
+            columns: ["tenant_id", "stay_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_stays";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      pg_stay_rates: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          effective_from: string;
+          electricity_paise: number;
+          id: string;
+          meal_paise: number;
+          meal_plan_id: string | null;
+          meal_plan_name: string | null;
+          rent_paise: number;
+          stay_id: string;
+          tenant_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          effective_from: string;
+          electricity_paise?: number;
+          id?: string;
+          meal_paise?: number;
+          meal_plan_id?: string | null;
+          meal_plan_name?: string | null;
+          rent_paise: number;
+          stay_id: string;
+          tenant_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          effective_from?: string;
+          electricity_paise?: number;
+          id?: string;
+          meal_paise?: number;
+          meal_plan_id?: string | null;
+          meal_plan_name?: string | null;
+          rent_paise?: number;
+          stay_id?: string;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_stay_rates_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_stay_rates_tenant_id_meal_plan_id_fkey";
+            columns: ["tenant_id", "meal_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_meal_plans";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "pg_stay_rates_tenant_id_stay_id_fkey";
+            columns: ["tenant_id", "stay_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_stays";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
+      pg_stays: {
+        Row: {
+          bed_id: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          customer_id: string;
+          deposit_paise: number;
+          id: string;
+          moved_out_on: string | null;
+          notice_given_on: string | null;
+          planned_move_out: string | null;
+          room_id: string;
+          settled_by: string | null;
+          start_date: string;
+          status: Database["public"]["Enums"]["pg_stay_status"];
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          bed_id?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id: string;
+          deposit_paise?: number;
+          id?: string;
+          moved_out_on?: string | null;
+          notice_given_on?: string | null;
+          planned_move_out?: string | null;
+          room_id: string;
+          settled_by?: string | null;
+          start_date: string;
+          status?: Database["public"]["Enums"]["pg_stay_status"];
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          bed_id?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id?: string;
+          deposit_paise?: number;
+          id?: string;
+          moved_out_on?: string | null;
+          notice_given_on?: string | null;
+          planned_move_out?: string | null;
+          room_id?: string;
+          settled_by?: string | null;
+          start_date?: string;
+          status?: Database["public"]["Enums"]["pg_stay_status"];
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_stays_tenant_id_bed_id_fkey";
+            columns: ["tenant_id", "bed_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_beds";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "pg_stays_tenant_id_customer_id_fkey";
+            columns: ["tenant_id", "customer_id"];
+            isOneToOne: false;
+            referencedRelation: "rental_customers";
+            referencedColumns: ["tenant_id", "id"];
+          },
+          {
+            foreignKeyName: "pg_stays_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_stays_tenant_id_room_id_fkey";
+            columns: ["tenant_id", "room_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_rooms";
+            referencedColumns: ["tenant_id", "id"];
           },
         ];
       };
@@ -689,6 +1319,7 @@ export type Database = {
       };
       tenants: {
         Row: {
+          business_type: Database["public"]["Enums"]["business_type"];
           created_at: string;
           email: string | null;
           id: string;
@@ -703,6 +1334,7 @@ export type Database = {
           whatsapp_addon: boolean;
         };
         Insert: {
+          business_type?: Database["public"]["Enums"]["business_type"];
           created_at?: string;
           email?: string | null;
           id?: string;
@@ -717,6 +1349,7 @@ export type Database = {
           whatsapp_addon?: boolean;
         };
         Update: {
+          business_type?: Database["public"]["Enums"]["business_type"];
           created_at?: string;
           email?: string | null;
           id?: string;
@@ -842,8 +1475,61 @@ export type Database = {
         }[];
       };
       mark_password_changed: { Args: Record<PropertyKey, never>; Returns: undefined };
+      pg_add_adjustment: {
+        Args: {
+          p_amount_paise: number;
+          p_kind: Database["public"]["Enums"]["pg_adjustment_kind"];
+          p_reason: string;
+          p_stay_id: string;
+        };
+        Returns: string;
+      };
+      pg_cancel_stay: { Args: { p_stay_id: string }; Returns: undefined };
+      pg_change_rates: {
+        Args: {
+          p_effective_from: string;
+          p_electricity_paise: number;
+          p_meal_plan_id: string;
+          p_rent_paise: number;
+          p_stay_id: string;
+        };
+        Returns: undefined;
+      };
+      pg_create_room: {
+        Args: {
+          p_beds: number;
+          p_floor: string;
+          p_name: string;
+          p_notes?: string;
+          p_rent_mode: Database["public"]["Enums"]["pg_rent_mode"];
+          p_rent_paise: number;
+        };
+        Returns: string;
+      };
+      pg_give_notice: {
+        Args: { p_notice_on: string; p_planned_move_out: string; p_stay_id: string };
+        Returns: undefined;
+      };
+      pg_move_in: {
+        Args: {
+          p_bed_id: string;
+          p_customer_id: string;
+          p_deposit_paise: number;
+          p_meal_plan_id: string;
+          p_rent_paise?: number;
+          p_room_id: string;
+          p_start_date: string;
+        };
+        Returns: string;
+      };
+      pg_settle_move_out: {
+        Args: { p_deductions?: Json; p_moved_out_on: string; p_stay_id: string };
+        Returns: number;
+      };
+      pg_withdraw_notice: { Args: { p_stay_id: string }; Returns: undefined };
       provision_tenant_with_owner: {
         Args: {
+          p_business_type?: Database["public"]["Enums"]["business_type"];
           p_is_test?: boolean;
           p_owner_id: string;
           p_owner_mobile: string;
@@ -867,12 +1553,29 @@ export type Database = {
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "STAFF";
       booking_status: "ACTIVE" | "PARTIALLY_RETURNED" | "RETURNED" | "OVERDUE" | "CANCELLED";
+      business_type: "TENT_HOUSE" | "HOSTEL_PG";
       discount_type: "NONE" | "FLAT" | "PERCENT";
       message_channel: "WHATSAPP" | "SMS";
       message_log_channel: "WHATSAPP" | "SMS" | "COPY" | "WHATSAPP_API";
-      message_type: "BOOKING_CONFIRMATION" | "AMOUNT_DUE" | "RETURN_CONFIRMATION";
+      message_type:
+        | "BOOKING_CONFIRMATION"
+        | "AMOUNT_DUE"
+        | "RETURN_CONFIRMATION"
+        | "RENT_DUE"
+        | "PAYMENT_RECEIPT";
       payment_kind: "PAYMENT" | "REVERSAL";
       payment_mode: "CASH" | "UPI" | "CARD" | "OTHER";
+      pg_adjustment_kind: "CHARGE" | "DISCOUNT";
+      pg_complaint_category:
+        "ELECTRICAL" | "PLUMBING" | "CLEANING" | "FURNITURE" | "WIFI" | "FOOD" | "OTHER";
+      pg_complaint_priority: "NORMAL" | "URGENT";
+      pg_complaint_status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
+      pg_id_side: "FRONT" | "BACK" | "OTHER";
+      pg_id_type:
+        "AADHAAR" | "PAN" | "DRIVING_LICENCE" | "VOTER_ID" | "PASSPORT" | "COLLEGE_ID" | "OTHER";
+      pg_payment_purpose: "RENT" | "DEPOSIT" | "REFUND";
+      pg_rent_mode: "PER_BED" | "PER_ROOM";
+      pg_stay_status: "ACTIVE" | "NOTICE" | "MOVED_OUT" | "CANCELLED";
       profile_status: "ACTIVE" | "INACTIVE";
       rate_unit: "PER_DAY" | "PER_EVENT";
       subscription_payment_method: "UPI" | "BANK_TRANSFER" | "CASH" | "OTHER";
@@ -992,12 +1695,44 @@ export const Constants = {
     Enums: {
       app_role: ["SUPER_ADMIN", "ADMIN", "STAFF"],
       booking_status: ["ACTIVE", "PARTIALLY_RETURNED", "RETURNED", "OVERDUE", "CANCELLED"],
+      business_type: ["TENT_HOUSE", "HOSTEL_PG"],
       discount_type: ["NONE", "FLAT", "PERCENT"],
       message_channel: ["WHATSAPP", "SMS"],
       message_log_channel: ["WHATSAPP", "SMS", "COPY", "WHATSAPP_API"],
-      message_type: ["BOOKING_CONFIRMATION", "AMOUNT_DUE", "RETURN_CONFIRMATION"],
+      message_type: [
+        "BOOKING_CONFIRMATION",
+        "AMOUNT_DUE",
+        "RETURN_CONFIRMATION",
+        "RENT_DUE",
+        "PAYMENT_RECEIPT",
+      ],
       payment_kind: ["PAYMENT", "REVERSAL"],
       payment_mode: ["CASH", "UPI", "CARD", "OTHER"],
+      pg_adjustment_kind: ["CHARGE", "DISCOUNT"],
+      pg_complaint_category: [
+        "ELECTRICAL",
+        "PLUMBING",
+        "CLEANING",
+        "FURNITURE",
+        "WIFI",
+        "FOOD",
+        "OTHER",
+      ],
+      pg_complaint_priority: ["NORMAL", "URGENT"],
+      pg_complaint_status: ["OPEN", "IN_PROGRESS", "RESOLVED"],
+      pg_id_side: ["FRONT", "BACK", "OTHER"],
+      pg_id_type: [
+        "AADHAAR",
+        "PAN",
+        "DRIVING_LICENCE",
+        "VOTER_ID",
+        "PASSPORT",
+        "COLLEGE_ID",
+        "OTHER",
+      ],
+      pg_payment_purpose: ["RENT", "DEPOSIT", "REFUND"],
+      pg_rent_mode: ["PER_BED", "PER_ROOM"],
+      pg_stay_status: ["ACTIVE", "NOTICE", "MOVED_OUT", "CANCELLED"],
       profile_status: ["ACTIVE", "INACTIVE"],
       rate_unit: ["PER_DAY", "PER_EVENT"],
       subscription_payment_method: ["UPI", "BANK_TRANSFER", "CASH", "OTHER"],

@@ -8,7 +8,7 @@ import { CustomerForm } from "../customer-form";
 export const metadata: Metadata = { title: "Add customer" };
 
 export default async function NewCustomerPage() {
-  const member = await requireActiveTenant();
+  const member = await requireActiveTenant({ type: "TENT_HOUSE" });
   return (
     <section className="max-w-lg">
       <Link href="/customers" className="text-sm font-medium text-brand-700">

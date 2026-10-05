@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { BusinessType } from "@/lib/auth/access";
 import { BottomNav, SideNav } from "./nav-links";
 import { SignOutButton } from "./sign-out-button";
 
@@ -13,12 +14,14 @@ export function AppShell({
   businessName,
   userName,
   readOnly = null,
+  businessType = "TENT_HOUSE",
   children,
 }: {
   businessName: string;
   userName: string;
   /** Why the business is read-only, if it is. */
   readOnly?: keyof typeof READ_ONLY_TEXT | null;
+  businessType?: BusinessType;
   children: React.ReactNode;
 }) {
   return (
@@ -27,7 +30,7 @@ export function AppShell({
         <Link href="/" className="mb-6 block px-3 text-lg font-bold text-brand-700">
           {businessName}
         </Link>
-        <SideNav />
+        <SideNav businessType={businessType} />
         <div className="mt-auto space-y-2 pt-6">
           <p className="truncate px-3 text-sm text-stone-500">{userName}</p>
           <SignOutButton />
@@ -49,15 +52,15 @@ export function AppShell({
               className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
               data-testid="read-only-banner"
             >
-              <strong>{READ_ONLY_TEXT[readOnly]}</strong> You can view your bookings and customers
-              but not make changes. Your data is safe. Contact support to renew.
+              <strong>{READ_ONLY_TEXT[readOnly]}</strong> You can view your data but not make
+              changes. Your data is safe. Contact support to renew.
             </div>
           )}
           {children}
         </main>
       </div>
 
-      <BottomNav />
+      <BottomNav businessType={businessType} />
     </div>
   );
 }
