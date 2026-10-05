@@ -9,20 +9,32 @@ const select =
   "mt-1 block min-h-12 w-full rounded-lg border border-stone-300 bg-white px-3 text-base focus:border-brand-600 focus:outline-none";
 const label = "block text-sm font-medium text-stone-700";
 
-/** Shrinks a phone photo to ~1600px JPEG (under 1 MB) before upload. */
+const MAX_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Turns any phone photo into a ~1280px JPEG before upload (usually
+ * 150–300 KB), so ID photos take little of the storage allowance and
+ * upload quickly on mobile data. Still readable for an ID card.
+ */
 async function shrink(file: File): Promise<Blob> {
   if (!file.type.startsWith("image/")) return file;
   try {
     const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.8));
-    return blob && blob.size < file.size ? blob : file;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#fff"; // transparent PNGs become white, not black
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const jpeg = (q: number) => new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", q));
+    let blob = await jpeg(0.7);
+    if (blob && blob.size > 500 * 1024) blob = await jpeg(0.5);
+    return blob ?? file;
   } catch {
-    return file; // e.g. a format the browser can't decode: let the server check it
+    return file; // a format the browser can't decode: the size check and server decide
   }
 }
 
@@ -44,6 +56,11 @@ export function IdPhotoUpload({
     setMessage(null);
     try {
       const blob = await shrink(file);
+      // Checked again on the server; refusing here saves a big upload on mobile data.
+      if (blob.size > MAX_BYTES) {
+        setMessage({ ok: false, text: "The photo must be under 2 MB." });
+        return;
+      }
       const body = new FormData();
       body.set("customerId", customerId);
       body.set("docType", docType);

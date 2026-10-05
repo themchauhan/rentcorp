@@ -1,7 +1,7 @@
 -- Hostel / PG (phase 13): business-type isolation, rooms/beds, stays,
 -- rate snapshots, dues mirror, payments, settlement, complaints, ID photos.
 begin;
-select plan(55);
+select plan(56);
 
 \set super    '''10000000-0000-4000-8000-000000000001'''
 \set admin_a  '''a0000000-0000-4000-8000-000000000001'''
@@ -170,6 +170,13 @@ select is((select resolved_by from public.pg_complaints where description = 'Din
 select throws_ok(format($$insert into public.pg_id_documents (customer_id, doc_type, storage_path, content_type, size_bytes) values (%L, 'AADHAAR', %L, 'image/jpeg', 10)$$,
   'd4000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee/x/y.jpg'),
   '23514', null, 'an ID photo must live in this business''s folder');
+insert into public.pg_id_documents (customer_id, doc_type, side, storage_path, content_type, size_bytes)
+select 'd4000000-0000-4000-8000-000000000003', 'AADHAAR', 'FRONT',
+       'dddddddd-dddd-4ddd-8ddd-dddddddddddd/d4000000-0000-4000-8000-000000000003/' || g || '.jpg', 'image/jpeg', 1000
+from generate_series(1, 4) g;
+select throws_ok(format($$insert into public.pg_id_documents (customer_id, doc_type, storage_path, content_type, size_bytes) values (%L, 'PAN', %L, 'image/jpeg', 10)$$,
+  'd4000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd/d4000000-0000-4000-8000-000000000003/5.jpg'),
+  '23514', null, 'at most 4 ID photos are kept per resident');
 reset role;
 insert into storage.objects (bucket_id, name) values ('resident-ids', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd/d4000000-0000-4000-8000-000000000001/a.jpg');
 select tests.act_as(:owner_e);

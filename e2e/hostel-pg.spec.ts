@@ -192,24 +192,45 @@ test("ID photos: upload, view, other businesses can't, owner deletes permanently
   const stay = testInfo.project.name === "mobile" ? IDS.stayD_aarav : IDS.stayD_kabir;
   await login(page, USERS.pgOwnerD);
   await page.goto(`/residents/${stay}`);
+  // The file input only works once React has attached its handler.
+  await waitForHydration(page);
   const upload = page.getByTestId("id-upload");
   await upload.getByLabel("ID photo").setInputFiles({
     name: "too-big.png",
     mimeType: "image/png",
-    buffer: Buffer.concat([PNG.subarray(0, 8), Buffer.alloc(6 * 1024 * 1024)]),
+    buffer: Buffer.concat([PNG.subarray(0, 8), Buffer.alloc(3 * 1024 * 1024)]),
   });
-  await expect(upload.getByRole("alert")).toContainText("under 5 MB");
+  await expect(upload.getByRole("alert")).toContainText("under 2 MB");
+  // The server refuses it too, if the browser check is skipped.
+  const direct = await page.request.post("/api/id-photos", {
+    multipart: {
+      customerId: "d4000000-0000-4000-8000-000000000002",
+      docType: "AADHAAR",
+      side: "FRONT",
+      file: {
+        name: "too-big.png",
+        mimeType: "image/png",
+        buffer: Buffer.concat([PNG.subarray(0, 8), Buffer.alloc(3 * 1024 * 1024)]),
+      },
+    },
+  });
+  expect(direct.status()).toBe(400);
+  expect((await direct.json()).error).toContain("under 2 MB");
 
-  await upload
-    .getByLabel("ID photo")
-    .setInputFiles({ name: "id.png", mimeType: "image/png", buffer: PNG });
+  // The upload's own response says which photo is ours.
+  const [saved] = await Promise.all([
+    page.waitForResponse(
+      (r) => r.url().endsWith("/api/id-photos") && r.request().method() === "POST",
+    ),
+    upload
+      .getByLabel("ID photo")
+      .setInputFiles({ name: "id.png", mimeType: "image/png", buffer: PNG }),
+  ]);
+  expect(saved.status()).toBe(200);
   await expect(upload.getByText("Photo saved.")).toBeVisible();
-  const photo = page
-    .getByTestId("id-photo")
-    .filter({ has: page.locator("img") })
-    .first();
+  const src = `/api/id-photos/${((await saved.json()) as { id: string }).id}`;
+  const photo = page.getByTestId("id-photo").filter({ has: page.locator(`img[src="${src}"]`) });
   await expect(photo).toBeVisible();
-  const src = (await photo.locator("img").getAttribute("src"))!;
   const own = await page.request.get(src);
   expect(own.status()).toBe(200);
   expect(own.headers()["cache-control"]).toContain("no-store");

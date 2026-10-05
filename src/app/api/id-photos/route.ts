@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 // only the caller's own business folder). The browser shrinks photos
 // before sending; the full ID number is never stored.
 
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 2 * 1024 * 1024; // matches the bucket limit
 const TYPES = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   if (!parsed.success || !(file instanceof File))
     return NextResponse.json({ error: "Choose a photo and the ID type." }, { status: 400 });
   if (file.size === 0 || file.size > MAX_BYTES)
-    return NextResponse.json({ error: "The photo must be under 5 MB." }, { status: 400 });
+    return NextResponse.json({ error: "The photo must be under 2 MB." }, { status: 400 });
   const type = file.type as keyof typeof TYPES;
   if (!(type in TYPES))
     return NextResponse.json({ error: "Use a JPG, PNG or WebP photo." }, { status: 400 });
@@ -98,6 +98,8 @@ export async function POST(request: Request) {
     .single();
   if (error) {
     await supabase.storage.from("resident-ids").remove([path]);
+    if (error.code === "23514" && /Up to 4/.test(error.message))
+      return NextResponse.json({ error: error.message }, { status: 400 });
     console.error("pg_id_documents insert failed:", error.message);
     return NextResponse.json({ error: "Couldn't save. Please try again." }, { status: 500 });
   }

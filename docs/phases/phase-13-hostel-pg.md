@@ -58,6 +58,13 @@ Branch: `hostel-pg`.
 - [x] `delete_test_business()` also removes the PG tables, and now the
       WhatsApp tables, which it previously missed
 
+- [x] Storage kept small for the free plan:
+      - the browser turns every ID photo into a ~1280px JPEG (usually
+        150–300 KB)
+      - the bucket and the server refuse anything over 2 MB
+      - at most 4 photos are kept per resident; deleting one frees a slot
+      - so 1 GB of Storage holds roughly 4,000–6,000 photos
+
 ## Tests
 
 - [x] pgTAP `97_hostel_pg` (55 checks):
@@ -115,7 +122,8 @@ in `e2e/hostel-pg.spec.ts` on a phone-sized screen.
 
 ## Going live (needs you)
 
-1. `npx supabase db push` for migrations `20261006000100`, `…0200`, `…0300`.
+1. `npx supabase db push` for migrations `20261006000100`, `…0200`, `…0300`,
+   `…0400`.
    The third one creates the private Storage bucket `resident-ids`
    (Storage is included in the free plan).
 2. Super admin → New business → choose **Hostel / PG**.
