@@ -108,3 +108,13 @@ values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a3000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000001', 100, '', '', 0, 'PER_DAY'),
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'a3000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000003', 1, '', '', 0, 'PER_DAY'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'b3000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001', 50, '', '', 0, 'PER_DAY');
+
+-- WhatsApp Cloud API (local tests only): Tenant A is connected to the mock
+-- Graph API used by the e2e suite. The token is a dummy value.
+insert into public.whatsapp_connections (tenant_id, waba_id, phone_number_id, display_phone_number)
+values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', '100000000000001', '200000000000001', '+91 90000 00100');
+select public.wa_set_credentials('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'dummy-local-access-token-not-real-0001');
+update public.rental_customers set whatsapp_opt_in = true where id = 'a2000000-0000-4000-8000-000000000001';
+
+-- Tenant A has the WhatsApp automation add-on (used by the e2e suite).
+update public.tenants set whatsapp_addon = true where id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

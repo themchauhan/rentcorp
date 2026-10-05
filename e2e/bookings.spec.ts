@@ -64,12 +64,12 @@ test("create a booking; its rates never change when the catalog does", async ({ 
   await expect(page.getByTestId("estimated-total")).toHaveText("₹495");
   await save(page);
 
-  await expect(page).toHaveURL(/\/bookings\/[0-9a-f-]+\?created=1$/);
+  await expect(page).toHaveURL(/\/bookings\/[0-9a-f-]+\?created=1(&wa=\w+)?$/);
   await expect(page.getByText("Booking saved.")).toBeVisible();
   await expect(page.getByRole("heading", { name: /Booking #\d+/ })).toBeVisible();
   await expect(page.getByTestId("booking-total")).toHaveText("₹495");
   await expect(page.getByText("Discount (10%) · E2E regular")).toBeVisible();
-  const bookingUrl = page.url().replace("?created=1", "");
+  const bookingUrl = page.url().replace(/\?.*$/, "");
 
   // Change the catalog price afterwards.
   await page.goto("/items");

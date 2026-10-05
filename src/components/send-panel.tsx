@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
+import { sendAutomatically } from "@/app/actions/whatsapp";
 import { detectPlatform, smsLink, whatsappLink, type Platform } from "@/lib/message-links";
 import type { MessageType } from "@/lib/messages";
 
@@ -29,6 +30,7 @@ export function SendPanel({
   mobile,
   whatsappNumber,
   preferredChannel,
+  autoSend,
 }: {
   orderId: string;
   type: MessageType;
@@ -38,6 +40,11 @@ export function SendPanel({
   mobile: string;
   whatsappNumber: string | null;
   preferredChannel: "WHATSAPP" | "SMS";
+  /**
+   * Present when the business has WhatsApp connected. `blocker` explains why
+   * this customer can't get an automatic message (null = they can).
+   */
+  autoSend?: { blocker: "no_whatsapp" | "no_consent" | null };
 }) {
   // Server render assumes Android; the browser reports the real platform.
   const platform = useSyncExternalStore<Platform>(
@@ -47,6 +54,19 @@ export function SendPanel({
   );
   const [status, setStatus] = useState<string | null>(null);
   const [showSms, setShowSms] = useState(!whatsappNumber || preferredChannel === "SMS");
+  const [sending, startSending] = useTransition();
+  const [autoResult, setAutoResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function sendAuto() {
+    startSending(async () => {
+      const r = await sendAutomatically(orderId, type);
+      setAutoResult(
+        r.ok
+          ? { ok: true, text: "Sent automatically. Delivery updates appear under Messages." }
+          : { ok: false, text: r.error },
+      );
+    });
+  }
 
   function log(channel: Channel, body: string) {
     const time = new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
@@ -102,6 +122,39 @@ export function SendPanel({
       >
         {showSms ? smsText : whatsappText}
       </pre>
+      {autoSend && autoSend.blocker === null && (
+        <div className="space-y-2" data-testid="auto-send">
+          <button
+            type="button"
+            onClick={sendAuto}
+            disabled={sending || autoResult?.ok}
+            className={`${button} w-full bg-green-700 text-white disabled:opacity-60`}
+          >
+            {sending
+              ? "Sending…"
+              : autoResult?.ok
+                ? "Sent automatically ✓"
+                : "Send automatically on WhatsApp"}
+          </button>
+          {autoResult && (
+            <p
+              role={autoResult.ok ? "status" : "alert"}
+              className={`text-sm ${autoResult.ok ? "text-green-800" : "text-red-700"}`}
+            >
+              {autoResult.text}
+            </p>
+          )}
+          <p className="text-center text-xs text-stone-500">or send it yourself:</p>
+        </div>
+      )}
+      {autoSend && autoSend.blocker !== null && (
+        <p className="text-xs text-stone-500" data-testid="auto-send-blocked">
+          Automatic WhatsApp:{" "}
+          {autoSend.blocker === "no_consent"
+            ? "customer hasn't agreed to WhatsApp messages (edit the customer to record consent)."
+            : "customer has no WhatsApp number."}
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-2">
         {whatsappNumber ? (
           <a

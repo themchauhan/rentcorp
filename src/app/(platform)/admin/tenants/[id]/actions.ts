@@ -9,6 +9,7 @@ import { isIsoDate } from "@/lib/dates";
 import { parseRupeesToPaise } from "@/lib/money";
 import { endOfIstDay, extendedEnd, istDateOf } from "@/lib/subscriptions";
 import { createClient } from "@/lib/supabase/server";
+import { disconnectConnection, saveConnection, sendTestMessage } from "@/lib/whatsapp/connection";
 
 export type AdminActionState = { error?: string; done?: string };
 
@@ -213,6 +214,36 @@ export async function setTestFlag(
   return { done: isTest ? "Marked as a test business." : "No longer a test business." };
 }
 
+export async function setWhatsAppAddon(
+  _prev: AdminActionState,
+  fd: FormData,
+): Promise<AdminActionState> {
+  await requireRole("SUPER_ADMIN");
+  const id = tenantIdOf(fd);
+  if (!id.success) return { error: "Business not found." };
+  const on = fd.get("addon") === "true";
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tenants")
+    .update({ whatsapp_addon: on })
+    .eq("id", id.data)
+    .select("id");
+  if (error || !data?.length) return { error: "Couldn't update. Please try again." };
+  await logAudit(
+    "tenant.whatsapp_addon_changed",
+    "tenant",
+    id.data,
+    { whatsapp_addon: on },
+    { tenantId: id.data },
+  );
+  refresh(id.data);
+  return {
+    done: on
+      ? "WhatsApp automation switched on. The owner now sees Settings → WhatsApp."
+      : "WhatsApp automation switched off. Only the one-tap buttons show.",
+  };
+}
+
 /**
  * Permanently deletes a business marked as Test, with everything in it and
  * its staff logins. The database function re-checks every rule.
@@ -238,4 +269,50 @@ export async function deleteTestBusiness(
   }
   revalidatePath("/admin");
   redirect(`/admin?deleted=${encodeURIComponent(confirm)}`);
+}
+
+// ---------------------------------------------------------------------------
+// WhatsApp connection (shared logic in src/lib/whatsapp/connection.ts)
+// ---------------------------------------------------------------------------
+
+export async function saveWhatsAppConnection(
+  _prev: AdminActionState,
+  fd: FormData,
+): Promise<AdminActionState> {
+  const me = await requireRole("SUPER_ADMIN");
+  const id = tenantIdOf(fd);
+  if (!id.success) return { error: "Business not found." };
+  const result = await saveConnection({
+    tenantId: id.data,
+    actorId: me.userId,
+    wabaId: String(fd.get("wabaId") ?? ""),
+    phoneNumberId: String(fd.get("phoneNumberId") ?? ""),
+    display: String(fd.get("displayNumber") ?? ""),
+    token: String(fd.get("accessToken") ?? ""),
+    via: "super_admin",
+  });
+  refresh(id.data);
+  return result;
+}
+
+export async function disconnectWhatsApp(
+  _prev: AdminActionState,
+  fd: FormData,
+): Promise<AdminActionState> {
+  const me = await requireRole("SUPER_ADMIN");
+  const id = tenantIdOf(fd);
+  if (!id.success) return { error: "Business not found." };
+  const result = await disconnectConnection(id.data, me.userId);
+  refresh(id.data);
+  return result;
+}
+
+export async function sendWhatsAppTest(
+  _prev: AdminActionState,
+  fd: FormData,
+): Promise<AdminActionState> {
+  const me = await requireRole("SUPER_ADMIN");
+  const id = tenantIdOf(fd);
+  if (!id.success) return { error: "Business not found." };
+  return sendTestMessage(id.data, me.userId, String(fd.get("testNumber") ?? ""));
 }

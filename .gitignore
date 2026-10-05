@@ -53,3 +53,6 @@ supabase/.branches
 
 # local backups
 /backups
+
+# local tool config
+/.claude

@@ -9,11 +9,17 @@ const patterns = [
   /sb_secret_[A-Za-z0-9_-]{8,}/, // Supabase secret key
   /SUPABASE_SECRET_KEY/,
   /SUPABASE_SERVICE_ROLE_KEY/,
+  /WHATSAPP_APP_SECRET/,
+  /CRON_SECRET/,
   /"role"\s*:\s*"service_role"/, // decoded legacy service-role JWT payload
   /postgres(ql)?:\/\/[^"'\s]*:[^"'\s]*@/, // DB connection string with password
 ];
 
-// Also look for the literal secret value, if it is set in this environment.
+// Also look for the literal secret values, if they are set in this environment.
+const waSecret = process.env.WHATSAPP_APP_SECRET;
+if (waSecret && waSecret.length >= 8) {
+  patterns.push(new RegExp(waSecret.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+}
 const secret = process.env.SUPABASE_SECRET_KEY;
 if (secret && secret.length >= 8)
   patterns.push(new RegExp(secret.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));

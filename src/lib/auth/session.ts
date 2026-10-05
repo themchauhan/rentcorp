@@ -9,6 +9,8 @@ export type SessionTenant = {
   status: TenantStatus;
   trial_ends_at: string | null;
   subscription_ends_at: string | null;
+  /** WhatsApp automation add-on (switched by the super admin). */
+  whatsapp_addon: boolean;
 };
 
 export type SessionProfile =
@@ -66,7 +68,7 @@ export async function loadProfile(
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "name, role, status, must_change_password, tenant_id, tenant:tenants (id, name, status, trial_ends_at, subscription_ends_at)",
+      "name, role, status, must_change_password, tenant_id, tenant:tenants (id, name, status, trial_ends_at, subscription_ends_at, whatsapp_addon)",
     )
     .eq("id", userId)
     .maybeSingle();

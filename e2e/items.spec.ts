@@ -1,5 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNotFound, formAlert, IDS, login, uniq, USERS, waitForHydration } from "./helpers";
+import {
+  expectNotFound,
+  formAlert,
+  IDS,
+  login,
+  tamperAndSubmit,
+  uniq,
+  USERS,
+  waitForHydration,
+} from "./helpers";
 
 const itemRow = (page: Page, name: string) =>
   page.getByTestId("item-row").filter({ hasText: name });
@@ -129,13 +138,18 @@ test("another business's item is invisible and can't be edited", async ({ page }
   // Tamper with B's own edit form so it targets A's item.
   await page.goto(`/items/${IDS.itemB_foldingChair}`);
   await waitForHydration(page);
-  await page.locator('input[name="itemId"]').evaluateAll((inputs, id) => {
-    for (const input of inputs as HTMLInputElement[]) input.value = id;
-  }, IDS.itemA_plasticChair);
   await page.getByLabel("Price (₹)").fill("1");
-  await page.getByRole("button", { name: "Save changes" }).click();
+  await tamperAndSubmit(
+    page.getByRole("button", { name: "Save changes" }),
+    "itemId",
+    IDS.itemA_plasticChair,
+  );
   await expect(formAlert(page)).toHaveText("Item not found.");
-  await page.getByRole("button", { name: "Deactivate item" }).click();
+  await tamperAndSubmit(
+    page.getByRole("button", { name: "Deactivate item" }),
+    "itemId",
+    IDS.itemA_plasticChair,
+  );
   await expect(page.getByText("Item not found.").last()).toBeVisible();
 
   // Tenant A's item is unchanged.

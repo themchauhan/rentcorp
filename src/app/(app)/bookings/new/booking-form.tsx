@@ -38,11 +38,13 @@ export function BookingForm({
   customers,
   today,
   initialCustomerId,
+  showWhatsAppConsent = false,
 }: {
   items: PickItem[];
   customers: PickCustomer[];
   today: string;
   initialCustomerId?: string;
+  showWhatsAppConsent?: boolean;
 }) {
   const [state, formAction] = useActionState<BookingFormState, FormData>(createBooking, {});
   const [pending, startTransition] = useTransition();
@@ -207,7 +209,12 @@ export function BookingForm({
           )
         ) : (
           <>
-            <CustomerFields initial={emptyCustomerForm} errors={state.customerErrors} prefix="c_" />
+            <CustomerFields
+              initial={emptyCustomerForm}
+              errors={state.customerErrors}
+              prefix="c_"
+              showWhatsAppConsent={showWhatsAppConsent}
+            />
             {state.duplicate && (
               <div
                 role="alert"

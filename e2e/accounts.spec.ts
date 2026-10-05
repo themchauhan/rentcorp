@@ -9,6 +9,7 @@ import {
   PASSWORD,
   randomMobile,
   readTempPassword,
+  tamperAndSubmit,
   USERS,
   waitForHydration,
 } from "./helpers";
@@ -149,15 +150,15 @@ test("an owner cannot deactivate or reset another business's staff", async ({ pa
   await page.goto("/team");
   const row = staffRow(page, "9000000202");
 
-  // Point both of Tenant B's staff forms at Tenant A's staff member.
+  // Point Tenant B's staff forms at Tenant A's staff member.
   await waitForHydration(page);
-  await row.locator('input[name="profileId"]').evaluateAll((inputs, id) => {
-    for (const input of inputs as HTMLInputElement[]) input.value = id;
-  }, IDS.staffA);
-
-  await row.getByRole("button", { name: "Deactivate" }).click();
+  await tamperAndSubmit(row.getByRole("button", { name: "Deactivate" }), "profileId", IDS.staffA);
   await expect(row.getByRole("alert")).toHaveText("Staff member not found.");
-  await row.getByRole("button", { name: "Reset password" }).click();
+  await tamperAndSubmit(
+    row.getByRole("button", { name: "Reset password" }),
+    "profileId",
+    IDS.staffA,
+  );
   await expect(row.getByRole("alert")).toHaveText("Staff member not found.");
   await expect(row.getByTestId("temp-password")).toHaveCount(0);
   await logout(page);

@@ -15,6 +15,7 @@ import { isIsoDate } from "@/lib/dates";
 import { parseRupeesToPaise } from "@/lib/money";
 import { estimateBooking, parsePercentToBasisPoints, type DiscountType } from "@/lib/pricing";
 import { createClient } from "@/lib/supabase/server";
+import { autoSendBookingDetails } from "@/lib/whatsapp/send";
 
 type BookingField =
   | "customer"
@@ -239,6 +240,12 @@ export async function createBooking(
     estimated_total_paise: estimate.total,
   });
 
+  // Booking details go out automatically when WhatsApp is connected and the
+  // customer agreed. A failure never undoes the booking.
+  const auto = await autoSendBookingDetails(orderId).catch((e) => {
+    console.error("auto booking details failed:", (e as Error).message);
+    return { ok: false as const, error: "error" };
+  });
   revalidatePath("/bookings");
-  redirect(`/bookings/${orderId}?created=1`);
+  redirect(`/bookings/${orderId}?created=1${auto ? (auto.ok ? "&wa=sent" : "&wa=failed") : ""}`);
 }

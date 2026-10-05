@@ -15,11 +15,13 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const { readOnly } = await requireTenantMember();
+  const { readOnly, tenant } = await requireTenantMember();
   const supabase = await createClient();
   const { data: c } = await supabase
     .from("rental_customers")
-    .select("id, name, mobile, whatsapp_number, preferred_channel, address")
+    .select(
+      "id, name, mobile, whatsapp_number, preferred_channel, address, whatsapp_opt_in, whatsapp_opted_out_at",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!c) notFound();
@@ -77,6 +79,18 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
 
       <div>
         <h2 className="mb-3 text-lg font-semibold">Details</h2>
+        {!c.whatsapp_opt_in && c.whatsapp_opted_out_at && (
+          <p
+            className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900"
+            data-testid="opted-out"
+          >
+            Asked to stop WhatsApp messages on{" "}
+            {new Date(c.whatsapp_opted_out_at).toLocaleDateString("en-IN", {
+              timeZone: "Asia/Kolkata",
+            })}
+            . Only tick the agreement box again if they ask to receive them.
+          </p>
+        )}
         {readOnly ? (
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
             <dt className="text-stone-500">Mobile</dt>
@@ -88,6 +102,7 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
           </dl>
         ) : (
           <CustomerForm
+            showWhatsAppConsent={tenant.whatsapp_addon}
             action={updateCustomer}
             customerId={c.id}
             submitLabel="Save changes"
@@ -97,6 +112,7 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
               whatsappNumber:
                 c.whatsapp_number && c.whatsapp_number !== c.mobile ? c.whatsapp_number : "",
               notOnWhatsapp: !c.whatsapp_number,
+              whatsappOptIn: c.whatsapp_opt_in,
               preferredChannel: c.preferred_channel,
               address: c.address ?? "",
             }}

@@ -16,6 +16,8 @@ export type MessageRecipient = {
   mobile: string;
   whatsappNumber: string | null;
   preferredChannel: "WHATSAPP" | "SMS";
+  /** Agreed to receive WhatsApp messages from the business (needed for API sends). */
+  whatsappOptIn: boolean;
 };
 
 /** The business's wording for each message type (defaults where not customised). */
@@ -30,7 +32,7 @@ export async function loadTemplates(
 
 export const ORDER_FOR_MESSAGES = `id, booking_number, status, event_start_date, event_start_time,
   expected_return_date, security_deposit_paise, discount_type, discount_value,
-  customer:rental_customers (name, mobile, whatsapp_number, preferred_channel),
+  customer:rental_customers (name, mobile, whatsapp_number, preferred_channel, whatsapp_opt_in),
   lines:rental_order_items (id, quantity, item_name_snapshot, unit_label_snapshot,
     rate_paise_snapshot, rate_unit_snapshot),
   returns:rental_returns (rental_order_item_id, quantity_returned, returned_on),
@@ -50,6 +52,7 @@ export type OrderForMessages = {
     mobile: string;
     whatsapp_number: string | null;
     preferred_channel: "WHATSAPP" | "SMS";
+    whatsapp_opt_in: boolean;
   } | null;
   lines: {
     id: string;
@@ -70,7 +73,7 @@ export function buildBookingMessages(
   templates: Record<MessageType, string>,
   types: MessageType[],
   asOf: string = todayIST(),
-): { recipient: MessageRecipient; messages: PreparedMessage[] } | null {
+): { recipient: MessageRecipient; messages: PreparedMessage[]; context: MessageContext } | null {
   if (!order.customer) return null;
   const lines = [...order.lines].sort((a, b) =>
     a.item_name_snapshot.localeCompare(b.item_name_snapshot),
@@ -111,7 +114,9 @@ export function buildBookingMessages(
       mobile: order.customer.mobile,
       whatsappNumber: order.customer.whatsapp_number,
       preferredChannel: order.customer.preferred_channel,
+      whatsappOptIn: order.customer.whatsapp_opt_in,
     },
+    context: ctx,
     messages: types.map((type) => ({
       type,
       whatsapp: buildMessage(type, ctx, templates[type], "WHATSAPP"),

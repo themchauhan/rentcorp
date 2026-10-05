@@ -44,16 +44,62 @@ export type Database = {
           },
         ];
       };
+      job_runs: {
+        Row: {
+          businesses: number;
+          errors: NonNullable<Json>;
+          failed: number;
+          finished_at: string | null;
+          id: number;
+          job: string;
+          run_date: string;
+          sent: number;
+          skipped: number;
+          started_at: string;
+        };
+        Insert: {
+          businesses?: number;
+          errors?: NonNullable<Json>;
+          failed?: number;
+          finished_at?: string | null;
+          id?: never;
+          job: string;
+          run_date: string;
+          sent?: number;
+          skipped?: number;
+          started_at?: string;
+        };
+        Update: {
+          businesses?: number;
+          errors?: NonNullable<Json>;
+          failed?: number;
+          finished_at?: string | null;
+          id?: never;
+          job?: string;
+          run_date?: string;
+          sent?: number;
+          skipped?: number;
+          started_at?: string;
+        };
+        Relationships: [];
+      };
       message_log: {
         Row: {
           amount_due_snapshot_paise: number | null;
           body_snapshot: string;
           channel: Database["public"]["Enums"]["message_log_channel"];
+          delivery_status: Database["public"]["Enums"]["whatsapp_delivery_status"] | null;
+          error_code: string | null;
+          error_message: string | null;
           id: number;
           message_type: Database["public"]["Enums"]["message_type"];
           opened_at: string;
+          provider_message_id: string | null;
+          reminder_date: string | null;
           rental_order_id: string;
           sent_by: string | null;
+          status_updated_at: string | null;
+          template_name: string | null;
           tenant_id: string;
           to_number: string | null;
         };
@@ -61,11 +107,18 @@ export type Database = {
           amount_due_snapshot_paise?: number | null;
           body_snapshot: string;
           channel: Database["public"]["Enums"]["message_log_channel"];
+          delivery_status?: Database["public"]["Enums"]["whatsapp_delivery_status"] | null;
+          error_code?: string | null;
+          error_message?: string | null;
           id?: never;
           message_type: Database["public"]["Enums"]["message_type"];
           opened_at?: string;
+          provider_message_id?: string | null;
+          reminder_date?: string | null;
           rental_order_id: string;
           sent_by?: string | null;
+          status_updated_at?: string | null;
+          template_name?: string | null;
           tenant_id?: string;
           to_number?: string | null;
         };
@@ -73,11 +126,18 @@ export type Database = {
           amount_due_snapshot_paise?: number | null;
           body_snapshot?: string;
           channel?: Database["public"]["Enums"]["message_log_channel"];
+          delivery_status?: Database["public"]["Enums"]["whatsapp_delivery_status"] | null;
+          error_code?: string | null;
+          error_message?: string | null;
           id?: never;
           message_type?: Database["public"]["Enums"]["message_type"];
           opened_at?: string;
+          provider_message_id?: string | null;
+          reminder_date?: string | null;
           rental_order_id?: string;
           sent_by?: string | null;
+          status_updated_at?: string | null;
+          template_name?: string | null;
           tenant_id?: string;
           to_number?: string | null;
         };
@@ -204,6 +264,9 @@ export type Database = {
           tenant_id: string;
           updated_at: string;
           whatsapp_number: string | null;
+          whatsapp_opt_in: boolean;
+          whatsapp_opt_in_at: string | null;
+          whatsapp_opted_out_at: string | null;
         };
         Insert: {
           address?: string | null;
@@ -216,6 +279,9 @@ export type Database = {
           tenant_id?: string;
           updated_at?: string;
           whatsapp_number?: string | null;
+          whatsapp_opt_in?: boolean;
+          whatsapp_opt_in_at?: string | null;
+          whatsapp_opted_out_at?: string | null;
         };
         Update: {
           address?: string | null;
@@ -228,6 +294,9 @@ export type Database = {
           tenant_id?: string;
           updated_at?: string;
           whatsapp_number?: string | null;
+          whatsapp_opt_in?: boolean;
+          whatsapp_opt_in_at?: string | null;
+          whatsapp_opted_out_at?: string | null;
         };
         Relationships: [
           {
@@ -631,6 +700,7 @@ export type Database = {
           subscription_ends_at: string | null;
           trial_ends_at: string | null;
           updated_at: string;
+          whatsapp_addon: boolean;
         };
         Insert: {
           created_at?: string;
@@ -644,6 +714,7 @@ export type Database = {
           subscription_ends_at?: string | null;
           trial_ends_at?: string | null;
           updated_at?: string;
+          whatsapp_addon?: boolean;
         };
         Update: {
           created_at?: string;
@@ -657,8 +728,85 @@ export type Database = {
           subscription_ends_at?: string | null;
           trial_ends_at?: string | null;
           updated_at?: string;
+          whatsapp_addon?: boolean;
         };
         Relationships: [];
+      };
+      whatsapp_connections: {
+        Row: {
+          connected_by: string | null;
+          created_at: string;
+          display_phone_number: string;
+          id: string;
+          phone_number_id: string;
+          status: Database["public"]["Enums"]["whatsapp_connection_status"];
+          tenant_id: string;
+          updated_at: string;
+          waba_id: string;
+        };
+        Insert: {
+          connected_by?: string | null;
+          created_at?: string;
+          display_phone_number: string;
+          id?: string;
+          phone_number_id: string;
+          status?: Database["public"]["Enums"]["whatsapp_connection_status"];
+          tenant_id: string;
+          updated_at?: string;
+          waba_id: string;
+        };
+        Update: {
+          connected_by?: string | null;
+          created_at?: string;
+          display_phone_number?: string;
+          id?: string;
+          phone_number_id?: string;
+          status?: Database["public"]["Enums"]["whatsapp_connection_status"];
+          tenant_id?: string;
+          updated_at?: string;
+          waba_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_connections_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      whatsapp_settings: {
+        Row: {
+          auto_booking_details: boolean;
+          evening_reminder: boolean;
+          tenant_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          auto_booking_details?: boolean;
+          evening_reminder?: boolean;
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          auto_booking_details?: boolean;
+          evening_reminder?: boolean;
+          tenant_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_settings_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: true;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {
@@ -710,13 +858,18 @@ export type Database = {
         Args: { p_items: Json; p_notes?: string; p_order_id: string; p_returned_on: string };
         Returns: number;
       };
+      wa_access_token: { Args: { p_tenant_id: string }; Returns: string };
+      wa_set_credentials: {
+        Args: { p_access_token: string; p_tenant_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "STAFF";
       booking_status: "ACTIVE" | "PARTIALLY_RETURNED" | "RETURNED" | "OVERDUE" | "CANCELLED";
       discount_type: "NONE" | "FLAT" | "PERCENT";
       message_channel: "WHATSAPP" | "SMS";
-      message_log_channel: "WHATSAPP" | "SMS" | "COPY";
+      message_log_channel: "WHATSAPP" | "SMS" | "COPY" | "WHATSAPP_API";
       message_type: "BOOKING_CONFIRMATION" | "AMOUNT_DUE" | "RETURN_CONFIRMATION";
       payment_kind: "PAYMENT" | "REVERSAL";
       payment_mode: "CASH" | "UPI" | "CARD" | "OTHER";
@@ -724,6 +877,8 @@ export type Database = {
       rate_unit: "PER_DAY" | "PER_EVENT";
       subscription_payment_method: "UPI" | "BANK_TRANSFER" | "CASH" | "OTHER";
       tenant_status: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
+      whatsapp_connection_status: "CONNECTED" | "DISCONNECTED";
+      whatsapp_delivery_status: "SENT" | "DELIVERED" | "READ" | "FAILED" | "PENDING";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -839,7 +994,7 @@ export const Constants = {
       booking_status: ["ACTIVE", "PARTIALLY_RETURNED", "RETURNED", "OVERDUE", "CANCELLED"],
       discount_type: ["NONE", "FLAT", "PERCENT"],
       message_channel: ["WHATSAPP", "SMS"],
-      message_log_channel: ["WHATSAPP", "SMS", "COPY"],
+      message_log_channel: ["WHATSAPP", "SMS", "COPY", "WHATSAPP_API"],
       message_type: ["BOOKING_CONFIRMATION", "AMOUNT_DUE", "RETURN_CONFIRMATION"],
       payment_kind: ["PAYMENT", "REVERSAL"],
       payment_mode: ["CASH", "UPI", "CARD", "OTHER"],
@@ -847,6 +1002,8 @@ export const Constants = {
       rate_unit: ["PER_DAY", "PER_EVENT"],
       subscription_payment_method: ["UPI", "BANK_TRANSFER", "CASH", "OTHER"],
       tenant_status: ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED"],
+      whatsapp_connection_status: ["CONNECTED", "DISCONNECTED"],
+      whatsapp_delivery_status: ["SENT", "DELIVERED", "READ", "FAILED", "PENDING"],
     },
   },
 } as const;

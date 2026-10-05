@@ -81,6 +81,7 @@ passwords are reset by the owner (staff) or super admin (owners).
 | `rental_payments` | id, tenant_id, rental_order_id, kind (`PAYMENT`\|`REVERSAL`), amount_paise (negative for reversals), mode (`CASH`\|`UPI`\|`CARD`\|`OTHER`), reverses_payment_id, received_by, received_at, note |
 | `message_log` | id, tenant_id, rental_order_id, message_type (`BOOKING_CONFIRMATION`\|`AMOUNT_DUE`\|`RETURN_CONFIRMATION`), channel (`WHATSAPP`\|`SMS`\|`COPY`), to_number, body_snapshot, amount_due_snapshot_paise, sent_by, opened_at |
 | `message_templates` | tenant_id, message_type, body (owner's custom wording; none = default) |
+| `whatsapp_connections` | tenant_id (unique), waba_id, phone_number_id, display_phone_number, status — token in Vault via `private.whatsapp_credentials` |
 | `audit_logs` | id, tenant_id, user_id, action, target_type, target_id, metadata, created_at |
 | `subscription_payments` | id, tenant_id, amount_paise, payment_date, payment_method (`UPI`\|`BANK_TRANSFER`\|`CASH`\|`OTHER`), reference_number, period_start, period_end, notes, recorded_by |
 
@@ -112,6 +113,39 @@ never from the client. RLS scopes every query to it.
   same-day = 1). PER_EVENT items are charged once per booking.
   Implemented and unit-tested in `src/lib/pricing.ts`.
 - Discount value: FLAT in paise; PERCENT in basis points (1000 = 10%).
+
+## Automatic WhatsApp (Meta Cloud API)
+
+**Optional add-on (2026-10-05).** Off by default per business; the super
+admin switches it on when a client asks for it (Meta charges per message).
+Without it the business sees only the one-tap buttons — no WhatsApp
+settings, consent checkbox or automatic button — and no automatic send or
+9 PM message ever goes out for it. Setup steps for RentCorp and the client:
+`docs/whatsapp/client-onboarding.md`.
+
+Added 2026-10-01 at the owner's request (see
+`RentCorp_WhatsApp_Integration_Presentation.pptx`), alongside the manual
+buttons below.
+
+- Each business connects **its own** WhatsApp Business number (never a
+  central RentCorp number). For now the super admin enters the connection
+  (WABA ID, phone number ID, access token) on the business's page; Meta's
+  Embedded Signup comes later.
+- Messages use fixed, Meta-approved templates (`docs/whatsapp/templates.md`),
+  sent server-side; tokens are stored in Supabase Vault.
+- Only customers who agreed to receive WhatsApp messages get automatic
+  messages; replying STOP opts them out.
+- Meta's webhook reports sent / delivered / read / failed, shown in the
+  booking's message history.
+- Owners can connect their own number in Settings → WhatsApp (paste the
+  details from Meta, or Meta's "Connect with Meta" button once RentCorp is
+  an approved Tech Provider).
+- Automatic messages (each switchable per business):
+  1. **Booking details** right after a booking is saved.
+  2. **9 PM IST balance** every evening to every customer with money due —
+     items out (incl. overdue) get the amount due, returned-but-unpaid get
+     the final bill — until settled. At most one per booking per day.
+- Businesses that don't connect keep the one-tap buttons.
 
 ## Pricing and discounts
 

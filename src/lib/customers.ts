@@ -9,6 +9,8 @@ export type CustomerFormInput = {
   /** Blank = same as mobile. */
   whatsappNumber: string;
   notOnWhatsapp: boolean;
+  /** Customer agreed to receive WhatsApp messages from the business. */
+  whatsappOptIn: boolean;
   preferredChannel: Channel;
   address: string;
 };
@@ -19,6 +21,7 @@ export type CustomerRow = {
   name: string;
   mobile: string;
   whatsapp_number: string | null;
+  whatsapp_opt_in: boolean;
   preferred_channel: Channel;
   address: string | null;
 };
@@ -30,6 +33,7 @@ export function readCustomerForm(formData: FormData, prefix = ""): CustomerFormI
     mobile: get("mobile"),
     whatsappNumber: get("whatsappNumber"),
     notOnWhatsapp: formData.get(prefix + "notOnWhatsapp") === "on",
+    whatsappOptIn: formData.get(prefix + "whatsappOptIn") === "on",
     preferredChannel: get("preferredChannel") === "SMS" ? "SMS" : "WHATSAPP",
     address: get("address"),
   };
@@ -68,6 +72,8 @@ export function parseCustomer(
       name: name.data,
       mobile,
       whatsapp_number: whatsapp,
+      // Consent only means something with a WhatsApp number.
+      whatsapp_opt_in: Boolean(whatsapp) && input.whatsappOptIn,
       // No WhatsApp number → SMS is the only option.
       preferred_channel: whatsapp ? input.preferredChannel : "SMS",
       address: address || null,
@@ -80,6 +86,7 @@ export const emptyCustomerForm: CustomerFormInput = {
   mobile: "",
   whatsappNumber: "",
   notOnWhatsapp: false,
+  whatsappOptIn: false,
   preferredChannel: "WHATSAPP",
   address: "",
 };

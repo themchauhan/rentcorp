@@ -36,6 +36,15 @@ const CHANNEL_LABEL = {
   WHATSAPP: "opened in WhatsApp",
   SMS: "opened in SMS",
   COPY: "copied",
+  WHATSAPP_API: "sent automatically on WhatsApp",
+} as const;
+// Real delivery status reported by WhatsApp (automatic sends only).
+const DELIVERY_LABEL = {
+  PENDING: "Sending…",
+  SENT: "Sent",
+  DELIVERED: "Delivered",
+  READ: "Read",
+  FAILED: "Failed",
 } as const;
 const MODE_LABEL = { CASH: "Cash", UPI: "UPI", CARD: "Card", OTHER: "Other" } as const;
 
@@ -51,7 +60,9 @@ const fmtTime = (iso: string) =>
 
 export default async function BookingPage({ params, searchParams }: PageProps<"/bookings/[id]">) {
   const { id } = await params;
-  const createdParam = (await searchParams).created === "1";
+  const sp = await searchParams;
+  const createdParam = sp.created === "1";
+  const waParam = sp.wa;
   if (!z.uuid().safeParse(id).success) notFound();
 
   const profile = await requireTenantMember();
@@ -64,7 +75,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
        expected_return_date, security_deposit_paise, discount_type, discount_value,
        discount_reason, discount_updated_by, discount_updated_at, notes,
        closed_at, closed_by, cancelled_at, cancelled_by, cancel_reason,
-       customer:rental_customers (id, name, mobile, whatsapp_number, preferred_channel),
+       customer:rental_customers (id, name, mobile, whatsapp_number, preferred_channel, whatsapp_opt_in),
        lines:rental_order_items (id, quantity, item_name_snapshot, unit_label_snapshot,
          rate_paise_snapshot, rate_unit_snapshot),
        returns:rental_returns (id, rental_order_item_id, quantity_returned, returned_on,
@@ -131,9 +142,24 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
     ? buildBookingMessages(stored, profile.tenant.name, await loadTemplates(supabase), types, today)
     : null;
 
+  // Automatic sending only for businesses with the WhatsApp add-on.
+  const { data: connection } = profile.tenant.whatsapp_addon
+    ? await supabase.from("whatsapp_connections").select("status").maybeSingle()
+    : { data: null };
+  const autoSend =
+    connection?.status === "CONNECTED" && prepared
+      ? {
+          blocker: !prepared.recipient.whatsappNumber
+            ? ("no_whatsapp" as const)
+            : !prepared.recipient.whatsappOptIn
+              ? ("no_consent" as const)
+              : null,
+        }
+      : undefined;
+
   const { data: log } = await supabase
     .from("message_log")
-    .select("id, message_type, channel, opened_at, sent_by")
+    .select("id, message_type, channel, opened_at, sent_by, delivery_status, error_message")
     .eq("rental_order_id", order.id)
     .order("opened_at", { ascending: false })
     .limit(20);
@@ -179,6 +205,15 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
       </div>
 
       {created && <FormMessage tone="success">Booking saved.</FormMessage>}
+      {created && waParam === "sent" && (
+        <FormMessage tone="success">Booking details sent automatically on WhatsApp.</FormMessage>
+      )}
+      {created && waParam === "failed" && (
+        <FormMessage tone="error">
+          Couldn’t send the booking details automatically. Use the buttons below to send them
+          yourself.
+        </FormMessage>
+      )}
       {cancelled && (
         <div
           className="rounded-2xl border border-stone-300 bg-stone-100 p-4 text-sm"
@@ -277,6 +312,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
               mobile={prepared.recipient.mobile}
               whatsappNumber={prepared.recipient.whatsappNumber}
               preferredChannel={prepared.recipient.preferredChannel}
+              autoSend={autoSend}
             />
           </details>
         ))}
@@ -549,6 +585,21 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
               <li key={m.id} className="flex items-center justify-between gap-3 py-2">
                 <span>
                   {MESSAGE_LABEL[m.message_type]} · {CHANNEL_LABEL[m.channel]}
+                  {m.delivery_status && (
+                    <span
+                      className={`ml-1 rounded-full px-1.5 text-xs font-medium ${
+                        m.delivery_status === "FAILED"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                      data-testid="delivery-status"
+                    >
+                      {DELIVERY_LABEL[m.delivery_status]}
+                    </span>
+                  )}
+                  {m.error_message && (
+                    <span className="block text-xs text-red-700">{m.error_message}</span>
+                  )}
                   <span className="block text-xs text-stone-500">{nameOf(m.sent_by)}</span>
                 </span>
                 <time className="shrink-0 text-xs text-stone-500" dateTime={m.opened_at}>
@@ -561,8 +612,9 @@ export default async function BookingPage({ params, searchParams }: PageProps<"/
           <p className="text-sm text-stone-500">No messages sent yet.</p>
         )}
         <p className="mt-2 text-xs text-stone-500">
-          Shows when a message was opened in WhatsApp or SMS on your phone. The app can’t confirm it
-          was delivered.
+          Messages you send yourself show when they were opened in WhatsApp or SMS on your phone
+          (the app can’t confirm delivery). Automatic WhatsApp messages show the status WhatsApp
+          reports.
         </p>
       </div>
     </section>

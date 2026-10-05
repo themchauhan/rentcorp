@@ -8,7 +8,7 @@ import { CustomerForm } from "../customer-form";
 export const metadata: Metadata = { title: "Add customer" };
 
 export default async function NewCustomerPage() {
-  await requireActiveTenant();
+  const member = await requireActiveTenant();
   return (
     <section className="max-w-lg">
       <Link href="/customers" className="text-sm font-medium text-brand-700">
@@ -16,6 +16,7 @@ export default async function NewCustomerPage() {
       </Link>
       <h1 className="mt-2 mb-6 text-2xl font-bold text-stone-900">Add customer</h1>
       <CustomerForm
+        showWhatsAppConsent={member.tenant.whatsapp_addon}
         action={createCustomer}
         initial={emptyCustomerForm}
         submitLabel="Save customer"

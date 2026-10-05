@@ -15,6 +15,8 @@ import {
   SubscriptionForm,
   SubscriptionPaymentForm,
   TestFlagForm,
+  WhatsAppAddonForm,
+  WhatsAppConnectionForm,
 } from "./forms";
 
 export const metadata: Metadata = { title: "Business" };
@@ -36,7 +38,7 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
   const { data: t } = await supabase
     .from("tenants")
     .select(
-      "id, name, phone, status, plan, is_test, trial_ends_at, subscription_ends_at, created_at, owners:profiles (id, name, mobile, role, status)",
+      "id, name, phone, status, plan, is_test, whatsapp_addon, trial_ends_at, subscription_ends_at, created_at, owners:profiles (id, name, mobile, role, status)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -48,6 +50,12 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
     )
     .eq("tenant_id", id)
     .order("payment_date", { ascending: false });
+
+  const { data: whatsapp } = await supabase
+    .from("whatsapp_connections")
+    .select("waba_id, phone_number_id, display_phone_number, status")
+    .eq("tenant_id", id)
+    .maybeSingle();
 
   const today = todayIST();
   const access = tenantAccess(t);
@@ -146,6 +154,22 @@ export default async function TenantAdminPage({ params }: PageProps<"/admin/tena
           </div>
         ))}
       </div>
+      <div className={card}>
+        <h2 className="mb-1 font-semibold">WhatsApp automation (add-on)</h2>
+        <p className="mb-3 text-sm text-stone-600">
+          Optional extra. Steps for you and the client: docs/whatsapp/client-onboarding.md.
+        </p>
+        <WhatsAppAddonForm tenantId={t.id} on={t.whatsapp_addon} />
+        {t.whatsapp_addon && (
+          <div className="mt-5 border-t border-stone-200 pt-4">
+            <p className="mb-3 text-sm text-stone-600">
+              The business’s own WhatsApp Business number, from Meta’s WhatsApp Manager.
+            </p>
+            <WhatsAppConnectionForm tenantId={t.id} connection={whatsapp} />
+          </div>
+        )}
+      </div>
+
       <div className={card}>
         <h2 className="mb-3 font-semibold">Test business</h2>
         <TestFlagForm tenantId={t.id} isTest={t.is_test} />

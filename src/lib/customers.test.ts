@@ -13,8 +13,16 @@ describe("parseCustomer", () => {
         whatsapp_number: "9876543210",
         preferred_channel: "WHATSAPP",
         address: null,
+        whatsapp_opt_in: false,
       },
     });
+  });
+
+  it("records WhatsApp consent only when there is a WhatsApp number", () => {
+    const yes = parseCustomer({ ...base, whatsappOptIn: true });
+    expect(yes.ok && yes.row.whatsapp_opt_in).toBe(true);
+    const noNumber = parseCustomer({ ...base, whatsappOptIn: true, notOnWhatsapp: true });
+    expect(noNumber.ok && noNumber.row.whatsapp_opt_in).toBe(false);
   });
 
   it("accepts a different WhatsApp number", () => {

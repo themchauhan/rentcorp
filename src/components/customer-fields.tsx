@@ -12,10 +12,13 @@ export function CustomerFields({
   initial,
   errors = {},
   prefix = "",
+  showWhatsAppConsent = false,
 }: {
   initial: CustomerFormInput;
   errors?: Partial<Record<CustomerFormField, string>>;
   prefix?: string;
+  /** Only for businesses with the WhatsApp automation add-on. */
+  showWhatsAppConsent?: boolean;
 }) {
   const [notOnWhatsapp, setNotOnWhatsapp] = useState(initial.notOnWhatsapp);
   const [channel, setChannel] = useState<Channel>(initial.preferredChannel);
@@ -51,6 +54,22 @@ export function CustomerFields({
         />
         Not on WhatsApp
       </label>
+      {showWhatsAppConsent && !notOnWhatsapp && (
+        <label className="flex min-h-11 items-start gap-3 text-base">
+          <input
+            type="checkbox"
+            name={`${prefix}whatsappOptIn`}
+            defaultChecked={initial.whatsappOptIn}
+            className="mt-1 h-5 w-5 accent-brand-700"
+          />
+          <span>
+            Agreed to receive WhatsApp messages from us
+            <span className="block text-xs text-stone-500">
+              Needed for automatic WhatsApp messages.
+            </span>
+          </span>
+        </label>
+      )}
       {!notOnWhatsapp && (
         <Field
           label="WhatsApp number (leave blank if same as mobile)"

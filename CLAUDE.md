@@ -9,8 +9,8 @@ A multi-tenant, mobile-first web app (installable PWA) sold to
 tent-house/event-rental businesses. Staff track rented-out items; the
 app builds the itemized message with rates and amount due, and staff
 send it from their own phone via WhatsApp or normal SMS with one tap.
-The app never sends messages by itself — no messaging provider, no
-automation. It is NOT inventory/warehouse software, NOT an accounting
+Businesses can also connect their own WhatsApp Business number so the
+app sends approved WhatsApp templates for them (Meta Cloud API). It is NOT inventory/warehouse software, NOT an accounting
 system, and does not take online payments.
 
 Full spec: `docs/BRIEF.md`. Phase checklists: `docs/phases/phase-N.md`
@@ -39,11 +39,21 @@ Full spec: `docs/BRIEF.md`. Phase checklists: `docs/phases/phase-N.md`
    existing booking's amount due. Amounts are always calculated by
    the app (never typed in), in integer paise. Booking-level
    discounts (flat ₹ or %) are audit-logged on every change.
-9. **Every message send/copy tap is logged** (channel, number, exact
-   body, amount due at that moment). The app cannot confirm delivery,
-   so the UI never claims "Delivered" — only "Opened in WhatsApp/SMS".
-   No automated or scheduled sending, and no WhatsApp Business API or
-   SMS gateway integration.
+9. **Every message is logged.** Manual sends (Send on WhatsApp / Send
+   SMS / Copy) log channel, number, exact body and amount due; the app
+   can't confirm their delivery, so the UI says only "Opened in
+   WhatsApp/SMS". Automatic WhatsApp sends go only through **each
+   business's own** WhatsApp Business number via Meta's Cloud API, only
+   to customers who **agreed** to receive them, using Meta-approved
+   templates; they are logged by the server with Meta's real delivery
+   status (sent/delivered/read/failed). Access tokens live in Supabase
+   Vault and never reach the browser. Automation is an **optional add-on**
+   (`tenants.whatsapp_addon`, switched only by the super admin); without it a
+   business sees only the one-tap buttons, no WhatsApp settings or consent box. Automatic sends: booking details
+   on save, and one balance message per booking per evening (9 PM IST)
+   while money is due — each switchable per business, never twice a day
+   (database-enforced). No SMS gateway. Businesses without WhatsApp
+   connected keep the one-tap manual buttons.
 10. **Mobile-first.** Every screen is designed and tested at ~360px
     phone width first, then desktop.
 11. **Every feature ships with tests for the happy path and the

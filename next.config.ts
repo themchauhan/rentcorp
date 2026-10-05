@@ -5,13 +5,19 @@ import type { NextConfig } from "next";
 // tight. 'unsafe-inline' scripts are needed for Next's inline bootstrap
 // scripts; eval is only allowed in development (fast refresh).
 const isDev = process.env.NODE_ENV !== "production";
+// Meta's "Connect with Meta" (Embedded Signup) needs its SDK, popup frames
+// and Graph calls — allowed only once the Meta app is configured.
+const meta = Boolean(
+  process.env.NEXT_PUBLIC_META_APP_ID && process.env.NEXT_PUBLIC_META_ES_CONFIG_ID,
+);
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}${meta ? " https://connect.facebook.net" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  `connect-src 'self'${isDev ? " ws:" : ""}`,
+  `connect-src 'self'${isDev ? " ws:" : ""}${meta ? " https://*.facebook.com https://graph.facebook.com" : ""}`,
+  `frame-src 'self'${meta ? " https://*.facebook.com" : ""}`,
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",

@@ -86,6 +86,11 @@ export default async function HomePage() {
     .filter((r) => r.due.amountDue > 0);
 
   const templates = await loadTemplates(supabase);
+  // Automatic sending only for businesses with the WhatsApp add-on.
+  const { data: connection } = profile.tenant.whatsapp_addon
+    ? await supabase.from("whatsapp_connections").select("status").maybeSingle()
+    : { data: null };
+  const waConnected = connection?.status === "CONNECTED";
   const { data: log } = orders.length
     ? await supabase
         .from("message_log")
@@ -214,6 +219,17 @@ export default async function HomePage() {
                         mobile={prepared.recipient.mobile}
                         whatsappNumber={prepared.recipient.whatsappNumber}
                         preferredChannel={prepared.recipient.preferredChannel}
+                        autoSend={
+                          waConnected
+                            ? {
+                                blocker: !prepared.recipient.whatsappNumber
+                                  ? "no_whatsapp"
+                                  : !prepared.recipient.whatsappOptIn
+                                    ? "no_consent"
+                                    : null,
+                              }
+                            : undefined
+                        }
                       />
                     </details>
                   )}

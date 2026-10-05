@@ -11,7 +11,7 @@ export default async function NewBookingPage({ searchParams }: PageProps<"/booki
   const raw = (await searchParams).customer;
   const initialCustomerId = Array.isArray(raw) ? raw[0] : raw;
 
-  await requireActiveTenant();
+  const member = await requireActiveTenant();
   const supabase = await createClient();
   const [{ data: items }, { data: customers }] = await Promise.all([
     supabase
@@ -39,6 +39,7 @@ export default async function NewBookingPage({ searchParams }: PageProps<"/booki
         </p>
       ) : (
         <BookingForm
+          showWhatsAppConsent={member.tenant.whatsapp_addon}
           today={todayIST()}
           initialCustomerId={initialCustomerId}
           customers={customers ?? []}

@@ -9,6 +9,7 @@ export const USERS = {
   inactiveA: "9000000103",
   passwordChangeA: "9000000104",
   adminB: "9000000201",
+  staffB: "9000000202",
   adminSuspendedC: "9000000301",
 } as const;
 
@@ -94,4 +95,24 @@ export async function waitForHydration(page: Page) {
 export async function expectNotFound(page: Page, path: string) {
   await page.goto(path);
   await expect(page.getByRole("heading", { name: "Page not found" }), path).toBeVisible();
+}
+
+/**
+ * Tamper test helper: overwrites a form's hidden field and submits that
+ * form in the same browser tick, so React can't re-render the real value
+ * back in between (which would silently submit the untampered form).
+ */
+export async function tamperAndSubmit(button: Locator, field: string, value: string) {
+  await button.evaluate(
+    (btn, [name, val]) => {
+      const form = (btn as HTMLButtonElement).form!;
+      for (const input of Array.from(
+        form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`),
+      )) {
+        input.value = val;
+      }
+      form.requestSubmit(btn as HTMLButtonElement);
+    },
+    [field, value] as const,
+  );
 }

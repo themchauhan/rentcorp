@@ -27,6 +27,13 @@ export default async function PlatformAdminPage({ searchParams }: PageProps<"/ad
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error("Couldn't load businesses");
+  const { data: lastRun } = await supabase
+    .from("job_runs")
+    .select("run_date, started_at, finished_at, businesses, sent, failed, skipped")
+    .eq("job", "evening_reminders")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const today = todayIST();
   const soon = addDays(today, 7);
@@ -64,6 +71,16 @@ export default async function PlatformAdminPage({ searchParams }: PageProps<"/ad
           </div>
         ))}
       </dl>
+
+      <p
+        className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm"
+        data-testid="last-evening-run"
+      >
+        <span className="font-medium">9 PM WhatsApp reminders: </span>
+        {lastRun
+          ? `last run ${formatDate(lastRun.run_date)}${lastRun.finished_at ? "" : " (still running or stopped)"} · ${lastRun.businesses} businesses · ${lastRun.sent} sent · ${lastRun.failed} failed · ${lastRun.skipped} skipped`
+          : "not run yet"}
+      </p>
 
       <ul className="space-y-2">
         {rows.map(({ t, end, access, endingSoon }) => {

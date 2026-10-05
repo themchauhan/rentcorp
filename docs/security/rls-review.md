@@ -42,8 +42,12 @@ below is backed by an automated test (named in brackets).
 | rental_returns | members | members, writable; quantity/date checked, row-locked | none | 70 |
 | rental_payments | members | members, writable; reversals owner-only | none | 70, 80 |
 | message_templates | members | owner, writable | owner, writable | 50 |
-| message_log | members | members, writable; sender/time forced | none | 50 |
+| message_log | members | manual sends: members, writable, sender/time forced; API sends: server only (trigger blocks users) | delivery status: webhook only (service role) | 50, 95 |
 | subscription_payments | super admin | super admin | none | 80 |
+| whatsapp_connections | own business; super admin | server only (super admin, or the owner for their own business — tenant from the session) | server only | 95, e2e |
+| whatsapp_settings | own business | owner, writable business | owner, writable business | 96 |
+| job_runs | super admin | server only | server only | 96 |
+| private.whatsapp_credentials | not exposed; tokens in Vault, read only via `wa_access_token()` (service_role) | `wa_set_credentials()` (service_role) | — | 95 |
 | private.booking_counters | not exposed | trigger only | trigger only | 40 |
 
 SECURITY DEFINER functions and their own checks: `cancel_booking`
@@ -54,6 +58,23 @@ same tenant + all returned + `final_balance_paise ≤ 0`),
 `is_test` + exact-name confirmation; the only hard delete, all-or-nothing,
 leaves a platform audit entry) [`85_test_business_delete`]. `create_booking` and `record_returns` run as the caller
 (RLS applies).
+
+## WhatsApp webhook
+
+`/api/whatsapp/webhook` is public but every POST must carry a valid
+`X-Hub-Signature-256` (HMAC of the raw body with the Meta app secret).
+Updates are matched to a business by `phone_number_id` and only touch that
+business's rows; statuses only move forward [e2e `whatsapp-api.spec.ts`].
+
+## Scheduled job
+
+`/api/cron/evening-reminders` (Vercel Cron, 21:00 IST) is public but
+requires `Authorization: Bearer <CRON_SECRET>` (constant-time compare).
+It uses the secret key because it spans businesses, but every query and
+send is filtered to the business being processed; read-only businesses and
+businesses with the reminder off are skipped. A unique index on
+`message_log (rental_order_id, reminder_date)` makes a second reminder the
+same day impossible, even if the job is retried [`96`, e2e].
 
 ## App layer
 

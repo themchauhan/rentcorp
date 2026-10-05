@@ -1,14 +1,23 @@
 "use client";
 
+import {
+  WhatsAppConnectionForm as SharedWhatsAppConnectionForm,
+  type ConnectionView,
+} from "@/components/whatsapp-connection-form";
+
 import { useActionState, useState } from "react";
 import { FormMessage } from "@/components/ui/form";
 import {
   deleteTestBusiness,
+  disconnectWhatsApp,
+  saveWhatsAppConnection,
+  sendWhatsAppTest,
   extendSubscription,
   recordSubscriptionPayment,
   setTestFlag,
   updateSubscription,
   type AdminActionState,
+  setWhatsAppAddon,
 } from "./actions";
 
 const input =
@@ -269,6 +278,29 @@ export function TestFlagForm({ tenantId, isTest }: { tenantId: string; isTest: b
   );
 }
 
+export function WhatsAppAddonForm({ tenantId, on }: { tenantId: string; on: boolean }) {
+  const [state, action, pending] = useActionState<AdminActionState, FormData>(setWhatsAppAddon, {});
+  return (
+    <form action={action} className="space-y-3" data-testid="whatsapp-addon-form">
+      <input type="hidden" name="tenantId" value={tenantId} />
+      <input type="hidden" name="addon" value={on ? "false" : "true"} />
+      <Result state={state} />
+      <p className="text-sm text-stone-600" data-testid="whatsapp-addon-status">
+        {on
+          ? "Add-on: On. The business can connect its own WhatsApp number and send automatically."
+          : "Add-on: Off. The business sees only the one-tap Send on WhatsApp / SMS buttons."}
+      </p>
+      <button
+        type="submit"
+        disabled={pending}
+        className="min-h-11 w-full rounded-lg border border-stone-300 bg-white font-medium disabled:opacity-60"
+      >
+        {on ? "Switch WhatsApp automation off" : "Switch WhatsApp automation on"}
+      </button>
+    </form>
+  );
+}
+
 export function DeleteTestBusinessForm({ tenantId, name }: { tenantId: string; name: string }) {
   const [state, action, pending] = useActionState<AdminActionState, FormData>(
     deleteTestBusiness,
@@ -304,5 +336,23 @@ export function DeleteTestBusinessForm({ tenantId, name }: { tenantId: string; n
         {pending ? "Deleting…" : "Delete test business permanently"}
       </button>
     </form>
+  );
+}
+
+export function WhatsAppConnectionForm({
+  tenantId,
+  connection,
+}: {
+  tenantId: string;
+  connection: ConnectionView | null;
+}) {
+  return (
+    <SharedWhatsAppConnectionForm
+      tenantId={tenantId}
+      connection={connection}
+      save={saveWhatsAppConnection}
+      disconnect={disconnectWhatsApp}
+      test={sendWhatsAppTest}
+    />
   );
 }

@@ -1,5 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { IDS, istDate, login, randomMobile, uniq, USERS, waitForHydration } from "./helpers";
+import {
+  IDS,
+  istDate,
+  login,
+  randomMobile,
+  tamperAndSubmit,
+  uniq,
+  USERS,
+  waitForHydration,
+} from "./helpers";
 
 async function newBooking(
   page: Page,
@@ -22,7 +31,7 @@ async function newBooking(
   await expect(saved.or(anyway)).toBeVisible();
   if (await anyway.isVisible()) await anyway.click();
   await expect(saved).toBeVisible();
-  return { name, url: page.url().replace("?created=1", "") };
+  return { name, url: page.url().replace(/\?.*$/, "") };
 }
 
 async function open(page: Page, section: string) {
@@ -184,12 +193,15 @@ test("returns and payments validate input", async ({ page }) => {
 
   // A tampered quantity beyond what's out is refused by the database.
   await waitForHydration(page);
-  await s.locator('input[name="items"]').evaluate((el) => {
-    const input = el as HTMLInputElement;
-    const items = JSON.parse(input.value) as { lineId: string; quantity: number }[];
-    input.value = JSON.stringify(items.map((i) => ({ ...i, quantity: 99 })));
-  });
-  await s.getByRole("button", { name: "Record return" }).click();
+  const lines = JSON.parse((await s.locator('input[name="items"]').inputValue()) || "[]") as {
+    lineId: string;
+    quantity: number;
+  }[];
+  await tamperAndSubmit(
+    s.getByRole("button", { name: "Record return" }),
+    "items",
+    JSON.stringify(lines.map((i) => ({ ...i, quantity: 99 }))),
+  );
   await expect(s.getByText(/Only 3 of "Round table" still out/)).toBeVisible();
 });
 
@@ -200,20 +212,22 @@ test("another business can't record payments or returns on your bookings", async
   const payment = await open(page, "section-payment");
   await payment.getByLabel("Amount received ₹").fill("1");
   await waitForHydration(page);
-  await payment.locator('input[name="orderId"]').evaluate((el, id) => {
-    (el as HTMLInputElement).value = id;
-  }, IDS.bookingA_seed);
-  await payment.getByRole("button", { name: "Record payment" }).click();
+  await tamperAndSubmit(
+    payment.getByRole("button", { name: "Record payment" }),
+    "orderId",
+    IDS.bookingA_seed,
+  );
   await expect(payment.getByText("Booking not found.")).toBeVisible();
 
   const ret = await open(page, "section-return");
   // Fill first (this re-renders the form), then tamper, then submit.
   await ret.getByRole("button", { name: "Everything is back" }).click();
   await waitForHydration(page);
-  await ret.locator('input[name="orderId"]').evaluate((el, id) => {
-    (el as HTMLInputElement).value = id;
-  }, IDS.bookingA_seed);
-  await ret.getByRole("button", { name: "Record return" }).click();
+  await tamperAndSubmit(
+    ret.getByRole("button", { name: "Record return" }),
+    "orderId",
+    IDS.bookingA_seed,
+  );
   await expect(ret.getByText("Booking not found.")).toBeVisible();
 
   // Tenant B's own booking wasn't changed by the tampered forms either.

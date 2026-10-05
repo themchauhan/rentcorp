@@ -50,7 +50,7 @@ export async function updateCustomer(
   _prev: CustomerFormState,
   formData: FormData,
 ): Promise<CustomerFormState> {
-  await requireActiveTenant();
+  const member = await requireActiveTenant();
   const values = readCustomerForm(formData);
   const id = z.uuid().safeParse(formData.get("customerId"));
   if (!id.success) return { values, error: "Customer not found." };
@@ -60,10 +60,13 @@ export async function updateCustomer(
   const supabase = await createClient();
   const { data: before } = await supabase
     .from("rental_customers")
-    .select("name, mobile, whatsapp_number, preferred_channel, address")
+    .select("name, mobile, whatsapp_number, preferred_channel, address, whatsapp_opt_in")
     .eq("id", id.data)
     .maybeSingle();
   if (!before) return { values, error: "Customer not found." };
+
+  // Without the WhatsApp add-on the consent box isn't shown: keep what's saved.
+  if (!member.tenant.whatsapp_addon) parsed.row.whatsapp_opt_in = before.whatsapp_opt_in;
 
   if (formData.get("confirmDuplicate") !== "1" && before.mobile !== parsed.row.mobile) {
     const duplicate = await findDuplicateCustomer(supabase, parsed.row, id.data);

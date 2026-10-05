@@ -4,7 +4,9 @@ import { publicEnv } from "@/lib/env";
 import { SESSION_COOKIE_OPTIONS } from "@/lib/supabase/cookies";
 
 // Paths reachable without signing in.
-const PUBLIC_PATHS = ["/login"];
+// Meta calls the WhatsApp webhook itself (it checks its own signature).
+// The scheduled job checks its own secret.
+const PUBLIC_PATHS = ["/login", "/api/whatsapp/webhook", "/api/cron"];
 
 /**
  * Refreshes the Supabase session cookie on every request and sends

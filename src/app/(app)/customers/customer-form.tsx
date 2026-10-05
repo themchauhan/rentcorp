@@ -12,11 +12,13 @@ export function CustomerForm({
   initial,
   customerId,
   submitLabel,
+  showWhatsAppConsent = false,
 }: {
   action: (prev: CustomerFormState, formData: FormData) => Promise<CustomerFormState>;
   initial: CustomerFormInput;
   customerId?: string;
   submitLabel: string;
+  showWhatsAppConsent?: boolean;
 }) {
   const [state, formAction, pending] = useActionState<CustomerFormState, FormData>(action, {});
   const values = state.values ?? initial;
@@ -29,7 +31,12 @@ export function CustomerForm({
       {state.error && <FormMessage tone="error">{state.error}</FormMessage>}
       {saved && <FormMessage tone="success">Saved.</FormMessage>}
       {/* Remount with submitted values so the inputs keep what was typed. */}
-      <CustomerFields key={JSON.stringify(values)} initial={values} errors={state.fieldErrors} />
+      <CustomerFields
+        key={JSON.stringify(values)}
+        initial={values}
+        errors={state.fieldErrors}
+        showWhatsAppConsent={showWhatsAppConsent}
+      />
       {state.duplicate && (
         <div
           role="alert"
