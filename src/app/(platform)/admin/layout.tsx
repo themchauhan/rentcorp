@@ -1,6 +1,7 @@
-import { SignOutButton } from "@/components/sign-out-button";
+import { AccountMenu } from "@/components/account-menu";
 import { APP_NAME } from "@/lib/app";
 import { requireRole } from "@/lib/auth/guards";
+import { mobileFromLoginEmail } from "@/lib/auth/mobile";
 
 export const dynamic = "force-dynamic";
 
@@ -8,16 +9,11 @@ export default async function PlatformLayout({ children }: LayoutProps<"/admin">
   const admin = await requireRole("SUPER_ADMIN");
   return (
     <div className="min-h-dvh">
-      <header className="flex items-center justify-between gap-3 border-b border-stone-200 bg-white px-4 py-3">
-        <span className="font-bold text-brand-700">{APP_NAME} · Platform admin</span>
-        <span className="truncate text-sm text-stone-500">{admin.name}</span>
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-stone-200 bg-white px-4 py-2">
+        <span className="truncate font-bold text-brand-700">{APP_NAME} · Platform admin</span>
+        <AccountMenu name={admin.name} mobile={mobileFromLoginEmail(admin.loginEmail)} />
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 py-6">
-        {children}
-        <div className="mt-8 max-w-xs">
-          <SignOutButton />
-        </div>
-      </main>
+      <main className="mx-auto w-full max-w-3xl px-4 py-6">{children}</main>
     </div>
   );
 }

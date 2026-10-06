@@ -68,8 +68,17 @@ export function randomMobile(): string {
 
 export async function logout(page: Page) {
   const visible = page.getByRole("button", { name: "Log out" }).filter({ visible: true });
+  // Platform admin: Log out is in the header's account menu.
+  const account = page.getByRole("button", { name: "Account" });
+  if ((await visible.count()) === 0 && (await account.count()) > 0) {
+    // Retry the tap until React has hydrated the menu button.
+    await expect(async () => {
+      if (!(await page.getByTestId("account-menu").isVisible())) await account.click();
+      await expect(page.getByTestId("account-menu")).toBeVisible({ timeout: 1000 });
+    }).toPass();
+  }
   // On phones, Log out lives on the More page (the sidebar is hidden).
-  if ((await visible.count()) === 0) await page.goto("/more");
+  else if ((await visible.count()) === 0) await page.goto("/more");
   await visible.first().click();
   await expect(page).toHaveURL(/\/login$/);
 }

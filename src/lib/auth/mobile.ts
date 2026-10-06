@@ -22,3 +22,11 @@ export function mobileToLoginEmail(mobile: string): string {
     throw new Error("mobileToLoginEmail expects a normalised mobile");
   return `91${mobile}@${LOGIN_EMAIL_DOMAIN}`;
 }
+
+/** The 10-digit mobile behind a login email (91<mobile>@mobile.invalid), if it is one. */
+export function mobileFromLoginEmail(email: string | null): string | null {
+  const m = email
+    ? new RegExp(`^91([6-9]\\d{9})@${LOGIN_EMAIL_DOMAIN.replace(/\./g, "\\.")}$`).exec(email)
+    : null;
+  return m ? m[1] : null;
+}

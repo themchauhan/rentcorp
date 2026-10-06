@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mobileToLoginEmail, normalizeIndianMobile } from "./mobile";
+import { mobileFromLoginEmail, mobileToLoginEmail, normalizeIndianMobile } from "./mobile";
 
 describe("normalizeIndianMobile", () => {
   it.each([
@@ -34,5 +34,16 @@ describe("mobileToLoginEmail", () => {
 
   it("refuses un-normalised input", () => {
     expect(() => mobileToLoginEmail("+91 98765 43210")).toThrow();
+  });
+});
+
+describe("mobileFromLoginEmail", () => {
+  it("reads the mobile back from a login email", () => {
+    expect(mobileFromLoginEmail("919876543210@mobile.invalid")).toBe("9876543210");
+  });
+  it("ignores anything else", () => {
+    expect(mobileFromLoginEmail("someone@example.com")).toBeNull();
+    expect(mobileFromLoginEmail("919876543210@mobileXinvalid")).toBeNull();
+    expect(mobileFromLoginEmail(null)).toBeNull();
   });
 });
