@@ -6,8 +6,8 @@ import { APP_NAME } from "@/lib/app";
 // "Install RentCorp" card at the top of the screen, like the one Chrome
 // shows for installable sites. Android / desktop Chrome: the Install button
 // opens the browser's own install dialog. iPhone / iPad (no install API):
-// explains Share → Add to Home Screen. Hidden once installed, and for two
-// weeks after the user closes it.
+// explains Share → Add to Home Screen. Hidden once installed, and for 24
+// hours after the user closes it (Chrome's own bar stays hidden too).
 
 type InstallEvent = Event & {
   prompt: () => Promise<void>;
@@ -15,7 +15,7 @@ type InstallEvent = Event & {
 };
 
 const DISMISS_KEY = "install-prompt-dismissed-until";
-const DISMISS_DAYS = 14;
+const DISMISS_HOURS = 24;
 const SHOW_AFTER_MS = 1500;
 
 function dismissedRecently(): boolean {
@@ -46,18 +46,20 @@ export function InstallPrompt() {
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
-    if (isInstalled() || dismissedRecently()) return;
+    if (isInstalled()) return;
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onPrompt = (e: Event) => {
-      e.preventDefault(); // show our card instead of Chrome's mini-bar
+      // Always stop Chrome's own install bar, even while our card is
+      // snoozed; otherwise Chrome shows its bar instead on every visit.
+      e.preventDefault();
       setDeferred(e as InstallEvent);
-      timer = setTimeout(() => setMode("android"), SHOW_AFTER_MS);
+      if (!dismissedRecently()) timer = setTimeout(() => setMode("android"), SHOW_AFTER_MS);
     };
     const onInstalled = () => setMode(null);
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
-    if (isIos()) timer = setTimeout(() => setMode("ios"), SHOW_AFTER_MS);
+    if (isIos() && !dismissedRecently()) timer = setTimeout(() => setMode("ios"), SHOW_AFTER_MS);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", onPrompt);
@@ -68,7 +70,7 @@ export function InstallPrompt() {
   function close() {
     setMode(null);
     try {
-      localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DAYS * 86_400_000));
+      localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_HOURS * 3_600_000));
     } catch {
       // private mode etc.: it just shows again next time
     }

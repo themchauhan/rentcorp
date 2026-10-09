@@ -38,6 +38,41 @@ test("Chrome: the install card opens the browser's install dialog", async ({ pag
   );
 });
 
+test("Chrome: closed means no card and no Chrome bar for 24 hours", async ({ page }) => {
+  const fire = () =>
+    page.evaluate(() => {
+      const e = new Event("beforeinstallprompt", { cancelable: true }) as Event & {
+        prompt: () => Promise<void>;
+        userChoice: Promise<{ outcome: string }>;
+      };
+      e.prompt = async () => {};
+      e.userChoice = Promise.resolve({ outcome: "dismissed" });
+      window.dispatchEvent(e);
+      return e.defaultPrevented; // true = Chrome's own bar is suppressed
+    });
+  await page.goto("/login");
+  await waitForHydration(page);
+  await fire();
+  const card = page.getByTestId("install-prompt");
+  await card.getByRole("button", { name: "Not now" }).click();
+  await expect(card).toHaveCount(0);
+
+  await page.reload();
+  await waitForHydration(page);
+  expect(await fire()).toBe(true);
+  await page.waitForTimeout(2500);
+  await expect(card).toHaveCount(0);
+
+  // 24 hours later it may show again.
+  await page.evaluate(() =>
+    localStorage.setItem("install-prompt-dismissed-until", String(Date.now() - 1)),
+  );
+  await page.reload();
+  await waitForHydration(page);
+  await fire();
+  await expect(card).toBeVisible();
+});
+
 test("iPhone: the card explains Add to Home Screen and stays closed once closed", async ({
   browser,
 }, testInfo) => {
