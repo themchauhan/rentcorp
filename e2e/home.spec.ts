@@ -99,8 +99,13 @@ test("bookings starting in the next few days are listed separately", async ({ pa
   await expect(page.getByTestId("home-row").filter({ hasText: name })).toHaveCount(0);
 });
 
-test("manifest offers a New booking shortcut", async ({ request }) => {
+test("manifest is installable and has no business-type-only shortcuts", async ({ request }) => {
   const manifest = await (await request.get("/manifest.webmanifest")).json();
-  expect(manifest.shortcuts.map((s: { url: string }) => s.url)).toContain("/bookings/new");
+  // One manifest serves tent houses and PGs: a "New booking" shortcut would 404 for a PG.
+  expect(manifest.shortcuts ?? []).toEqual([]);
+  expect(manifest.display).toBe("standalone");
+  expect(manifest.icons.map((i: { sizes: string }) => i.sizes)).toEqual(
+    expect.arrayContaining(["192x192", "512x512"]),
+  );
   expect(manifest.lang).toBe("en-IN");
 });

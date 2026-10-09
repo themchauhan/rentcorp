@@ -59,6 +59,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Everything except Next internals and static/PWA files.
-    "/((?!_next/static|_next/image|icons/|icon.png|apple-icon.png|manifest.webmanifest|favicon.ico).*)",
+    "/((?!_next/static|_next/image|icons/|icon.png|apple-icon.png|manifest.webmanifest|favicon.ico|sw.js|offline.html).*)",
   ],
 };
