@@ -6,12 +6,17 @@ import { fillTemplate, SMS_MAX_LENGTH, type MessageChannel } from "./messages";
 import { formatRupees } from "./money";
 import type { StayDues } from "./pg-dues";
 
-export type PgMessageType = "RENT_DUE" | "PAYMENT_RECEIPT";
-export const PG_MESSAGE_TYPES: PgMessageType[] = ["RENT_DUE", "PAYMENT_RECEIPT"];
+export type PgMessageType = "RENT_DUE" | "PAYMENT_RECEIPT" | "AGREEMENT_RENEWAL";
+export const PG_MESSAGE_TYPES: PgMessageType[] = [
+  "RENT_DUE",
+  "PAYMENT_RECEIPT",
+  "AGREEMENT_RENEWAL",
+];
 
 export const PG_MESSAGE_TITLE: Record<PgMessageType, string> = {
   RENT_DUE: "Rent due",
   PAYMENT_RECEIPT: "Payment receipt",
+  AGREEMENT_RENEWAL: "Agreement renewal",
 };
 
 export type PgMessageContext = {
@@ -21,6 +26,8 @@ export type PgMessageContext = {
   asOf: string;
   dues: Pick<StayDues, "amountDue" | "credit" | "nextDueDate" | "cycles" | "depositHeld">;
   lastPayment: { amountPaise: number; date: string } | null;
+  /** Current agreement and the proposed rent for the next term (renewal message). */
+  agreement?: { endDate: string; newRentPaise: number | null } | null;
 };
 
 export const PG_DEFAULT_TEMPLATES: Record<PgMessageType, string> = {
@@ -35,11 +42,16 @@ Received {last_payment} from {resident} on {payment_date} for {place}.
 Balance now: {amount_due}
 Next due date: {next_due}
 Thank you!`,
+  AGREEMENT_RENEWAL: `{business}
+Hi {resident}, your rent agreement for {place} ends on {agreement_end}.
+{new_rent_line}
+Please let us know if you'd like to renew. Thank you!`,
 };
 
 const COMPACT_SMS: Record<PgMessageType, string> = {
   RENT_DUE: `{business}: {resident}, rent due as of {today}: {amount_due} for {place}.`,
   PAYMENT_RECEIPT: `{business}: Received {last_payment} from {resident}. Balance {amount_due}.`,
+  AGREEMENT_RENEWAL: `{business}: {resident}, your agreement for {place} ends {agreement_end}. Reply to renew.`,
 };
 
 export const PG_PLACEHOLDERS: { key: string; meaning: string }[] = [
@@ -53,6 +65,8 @@ export const PG_PLACEHOLDERS: { key: string; meaning: string }[] = [
   { key: "last_payment", meaning: "Amount of the latest payment" },
   { key: "payment_date", meaning: "Date of the latest payment" },
   { key: "deposit", meaning: "Deposit held" },
+  { key: "agreement_end", meaning: "Agreement end date" },
+  { key: "new_rent_line", meaning: "“New rent from renewal: ₹X/month” (only if set)" },
 ];
 
 function money(paise: number, channel: MessageChannel): string {
@@ -79,6 +93,11 @@ function values(ctx: PgMessageContext, channel: MessageChannel): Record<string, 
     next_due: ctx.dues.nextDueDate ? formatDate(ctx.dues.nextDueDate) : "-",
     last_payment: ctx.lastPayment ? money(ctx.lastPayment.amountPaise, channel) : "-",
     payment_date: ctx.lastPayment ? formatDate(ctx.lastPayment.date) : "-",
+    agreement_end: ctx.agreement ? formatDate(ctx.agreement.endDate) : "-",
+    new_rent_line:
+      ctx.agreement?.newRentPaise != null
+        ? `New rent from renewal: ${money(ctx.agreement.newRentPaise, channel)}/month`
+        : "",
     deposit: money(ctx.dues.depositHeld, channel),
   };
 }
@@ -135,4 +154,5 @@ export const PG_SAMPLE: PgMessageContext = {
     ],
   },
   lastPayment: { amountPaise: 550000, date: "2026-09-20" },
+  agreement: { endDate: "2026-11-11", newRentPaise: 630000 },
 };

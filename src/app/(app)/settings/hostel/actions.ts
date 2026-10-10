@@ -21,12 +21,20 @@ export async function saveHostelSettings(_prev: State, fd: FormData): Promise<St
     electricity: String(fd.get("electricity") ?? ""),
     deposit: String(fd.get("deposit") ?? ""),
     noticeDays: String(fd.get("noticeDays") ?? ""),
+    agreementMonths: String(fd.get("agreementMonths") ?? ""),
+    lockInMonths: String(fd.get("lockInMonths") ?? ""),
+    increasePct: String(fd.get("increasePct") ?? ""),
+    alertDays: String(fd.get("alertDays") ?? ""),
   });
   if (!parsed.success) return { error: firstError(parsed.error) };
   const row = {
     electricity_paise: parsed.data.electricity,
     deposit_paise: parsed.data.deposit,
     notice_days: parsed.data.noticeDays,
+    agreement_months: parsed.data.agreementMonths,
+    lock_in_months: parsed.data.lockInMonths,
+    rent_increase_pct: parsed.data.increasePct,
+    agreement_alert_days: parsed.data.alertDays,
   };
   const supabase = await createClient();
   // tenant_id comes from the session (default + trigger).

@@ -23,6 +23,7 @@ const TYPE = {
   RETURN_CONFIRMATION: "Final bill",
   RENT_DUE: "Rent due",
   PAYMENT_RECEIPT: "Payment receipt",
+  AGREEMENT_RENEWAL: "Agreement renewal",
 } as const;
 
 export default async function WhatsAppSettingsPage() {

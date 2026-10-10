@@ -36,6 +36,18 @@ own menus. A PG gets:
 
 Details: `docs/phases/phase-13-hostel-pg.md`.
 
+**Agreements & renewals (phase 14, 2026-10-09).** Each PG resident can have
+a rent agreement:
+
+- length in months (default 11), an optional lock-in, and a yearly
+  increase % (default 5)
+- the signed copy stored privately as a PDF or photo
+- alerts from 30 days before the end, with a one-tap renewal message
+- renewing suggests the increased rent, which applies only from the first
+  future due date in the new term
+
+Details: `docs/phases/phase-14-agreements.md`.
+
 ## Platform
 
 - Mobile-first web app, installable as a PWA ("Add to Home Screen").

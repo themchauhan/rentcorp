@@ -247,3 +247,28 @@ insert into public.audit_logs (tenant_id, user_id, action, target_type, target_i
 values
   ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd0000000-0000-4000-8000-000000000001', 'seed.created', 'tenant', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'),
   ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e0000000-0000-4000-8000-000000000001', 'seed.created', 'tenant', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee');
+
+-- Agreements (phase 14), dates relative to today (IST):
+--  Aarav: 11 months from joining, 6-month lock-in (still in lock-in).
+--  Kabir: ends in 20 days (shows as "ending soon").
+--  Meera: ended 5 days ago, not renewed (shows as "expired").
+--  Rohan: none (on notice).  Esha (PG E): 11 months.
+insert into public.pg_agreements (id, tenant_id, stay_id, start_date, end_date, lock_in_until, rent_increase_pct, created_by)
+values
+  ('d8000000-0000-4000-8000-000000000001', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Kolkata')::date - 40,
+   (((now() at time zone 'Asia/Kolkata')::date - 40) + interval '11 months')::date - 1,
+   (((now() at time zone 'Asia/Kolkata')::date - 40) + interval '6 months')::date - 1,
+   5, 'd0000000-0000-4000-8000-000000000001'),
+  ('d8000000-0000-4000-8000-000000000002', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000002',
+   (now() at time zone 'Asia/Kolkata')::date - 75,
+   (now() at time zone 'Asia/Kolkata')::date + 20,
+   null, 5, 'd0000000-0000-4000-8000-000000000001'),
+  ('d8000000-0000-4000-8000-000000000003', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'd5000000-0000-4000-8000-000000000003',
+   ((now() at time zone 'Asia/Kolkata')::date - interval '1 month')::date,
+   (now() at time zone 'Asia/Kolkata')::date - 5,
+   null, 10, 'd0000000-0000-4000-8000-000000000001'),
+  ('e8000000-0000-4000-8000-000000000001', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'e5000000-0000-4000-8000-000000000001',
+   (now() at time zone 'Asia/Kolkata')::date - 20,
+   (((now() at time zone 'Asia/Kolkata')::date - 20) + interval '11 months')::date - 1,
+   null, 5, 'e0000000-0000-4000-8000-000000000001');

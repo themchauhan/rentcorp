@@ -28,7 +28,10 @@ export default async function MoveInPage({ searchParams }: PageProps<"/residents
       .select("id, name, monthly_paise")
       .eq("active", true)
       .order("name"),
-    supabase.from("pg_settings").select("deposit_paise, electricity_paise").maybeSingle(),
+    supabase
+      .from("pg_settings")
+      .select("deposit_paise, electricity_paise, agreement_months, lock_in_months")
+      .maybeSingle(),
   ]);
 
   const takenBeds = new Set((live ?? []).map((s) => s.bed_id).filter(Boolean));
@@ -77,6 +80,8 @@ export default async function MoveInPage({ searchParams }: PageProps<"/residents
             place: places.some((p) => p.value === pre) ? pre : "",
             startDate: todayIST(),
             deposit: paiseToRupeesInput(settings?.deposit_paise ?? 0),
+            agreementMonths: String(settings?.agreement_months ?? 11),
+            lockInMonths: String(settings?.lock_in_months ?? 0),
           }}
         />
       )}

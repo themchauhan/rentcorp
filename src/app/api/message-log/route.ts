@@ -22,7 +22,7 @@ const bookingSchema = z.object({
 // Hostel / PG resident messages.
 const staySchema = z.object({
   stayId: z.uuid(),
-  type: z.enum(["RENT_DUE", "PAYMENT_RECEIPT"]),
+  type: z.enum(["RENT_DUE", "PAYMENT_RECEIPT", "AGREEMENT_RENEWAL"]),
   ...common,
 });
 

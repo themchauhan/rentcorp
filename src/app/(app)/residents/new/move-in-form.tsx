@@ -22,7 +22,13 @@ export function MoveInForm({
   places: PlaceOption[];
   plans: PlaceOption[];
   isOwner: boolean;
-  initial: { place: string; startDate: string; deposit: string };
+  initial: {
+    place: string;
+    startDate: string;
+    deposit: string;
+    agreementMonths: string;
+    lockInMonths: string;
+  };
 }) {
   const [state, action, pending] = useActionState<MoveInState, FormData>(moveIn, {});
   const v = state.values ?? {};
@@ -156,6 +162,36 @@ export function MoveInForm({
             error={e.rent}
           />
         )}
+      </fieldset>
+
+      <fieldset className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4">
+        <legend className="px-1 font-semibold">Agreement</legend>
+        <div className="grid grid-cols-2 gap-2">
+          <Field
+            label="Agreement (months)"
+            name="agreementMonths"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={60}
+            defaultValue={val("agreementMonths", initial.agreementMonths)}
+            error={e.agreementMonths}
+          />
+          <Field
+            label="Lock-in (months)"
+            name="lockInMonths"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={24}
+            defaultValue={val("lockInMonths", initial.lockInMonths)}
+            error={e.lockInMonths}
+          />
+        </div>
+        <p className="text-xs text-stone-500">
+          Starts on the joining date. Set months to 0 to skip; you can add it later and upload the
+          signed copy on the resident’s page.
+        </p>
       </fieldset>
 
       <SubmitButton pending={pending}>Save move-in</SubmitButton>

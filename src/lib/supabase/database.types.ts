@@ -200,6 +200,85 @@ export type Database = {
           },
         ];
       };
+      pg_agreements: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          document_path: string | null;
+          document_size: number | null;
+          document_type: string | null;
+          document_uploaded_at: string | null;
+          end_date: string;
+          id: string;
+          lock_in_until: string | null;
+          renewed_from: string | null;
+          rent_increase_pct: number;
+          start_date: string;
+          status: Database["public"]["Enums"]["pg_agreement_status"];
+          stay_id: string;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          document_path?: string | null;
+          document_size?: number | null;
+          document_type?: string | null;
+          document_uploaded_at?: string | null;
+          end_date: string;
+          id?: string;
+          lock_in_until?: string | null;
+          renewed_from?: string | null;
+          rent_increase_pct?: number;
+          start_date: string;
+          status?: Database["public"]["Enums"]["pg_agreement_status"];
+          stay_id: string;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          document_path?: string | null;
+          document_size?: number | null;
+          document_type?: string | null;
+          document_uploaded_at?: string | null;
+          end_date?: string;
+          id?: string;
+          lock_in_until?: string | null;
+          renewed_from?: string | null;
+          rent_increase_pct?: number;
+          start_date?: string;
+          status?: Database["public"]["Enums"]["pg_agreement_status"];
+          stay_id?: string;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pg_agreements_renewed_from_fkey";
+            columns: ["renewed_from"];
+            isOneToOne: false;
+            referencedRelation: "pg_agreements";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_agreements_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pg_agreements_tenant_id_stay_id_fkey";
+            columns: ["tenant_id", "stay_id"];
+            isOneToOne: false;
+            referencedRelation: "pg_stays";
+            referencedColumns: ["tenant_id", "id"];
+          },
+        ];
+      };
       pg_beds: {
         Row: {
           active: boolean;
@@ -586,25 +665,37 @@ export type Database = {
       };
       pg_settings: {
         Row: {
+          agreement_alert_days: number;
+          agreement_months: number;
           deposit_paise: number;
           electricity_paise: number;
+          lock_in_months: number;
           notice_days: number;
+          rent_increase_pct: number;
           tenant_id: string;
           updated_at: string;
           updated_by: string | null;
         };
         Insert: {
+          agreement_alert_days?: number;
+          agreement_months?: number;
           deposit_paise?: number;
           electricity_paise?: number;
+          lock_in_months?: number;
           notice_days?: number;
+          rent_increase_pct?: number;
           tenant_id?: string;
           updated_at?: string;
           updated_by?: string | null;
         };
         Update: {
+          agreement_alert_days?: number;
+          agreement_months?: number;
           deposit_paise?: number;
           electricity_paise?: number;
+          lock_in_months?: number;
           notice_days?: number;
+          rent_increase_pct?: number;
           tenant_id?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -1495,6 +1586,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      pg_create_agreement: {
+        Args: {
+          p_increase_pct?: number;
+          p_lock_in_months?: number;
+          p_months: number;
+          p_start: string;
+          p_stay_id: string;
+        };
+        Returns: string;
+      };
       pg_create_room: {
         Args: {
           p_beds: number;
@@ -1522,9 +1623,26 @@ export type Database = {
         };
         Returns: string;
       };
+      pg_renew_agreement: {
+        Args: { p_agreement_id: string; p_months: number; p_new_rent_paise?: number };
+        Returns: string;
+      };
+      pg_set_agreement_document: {
+        Args: { p_agreement_id: string; p_path: string; p_size: number; p_type: string };
+        Returns: string;
+      };
       pg_settle_move_out: {
         Args: { p_deductions?: Json; p_moved_out_on: string; p_stay_id: string };
         Returns: number;
+      };
+      pg_update_agreement: {
+        Args: {
+          p_agreement_id: string;
+          p_end: string;
+          p_increase_pct: number;
+          p_lock_in_until: string;
+        };
+        Returns: undefined;
       };
       pg_withdraw_notice: { Args: { p_stay_id: string }; Returns: undefined };
       provision_tenant_with_owner: {
@@ -1562,10 +1680,12 @@ export type Database = {
         | "AMOUNT_DUE"
         | "RETURN_CONFIRMATION"
         | "RENT_DUE"
-        | "PAYMENT_RECEIPT";
+        | "PAYMENT_RECEIPT"
+        | "AGREEMENT_RENEWAL";
       payment_kind: "PAYMENT" | "REVERSAL";
       payment_mode: "CASH" | "UPI" | "CARD" | "OTHER";
       pg_adjustment_kind: "CHARGE" | "DISCOUNT";
+      pg_agreement_status: "ACTIVE" | "RENEWED" | "ENDED";
       pg_complaint_category:
         "ELECTRICAL" | "PLUMBING" | "CLEANING" | "FURNITURE" | "WIFI" | "FOOD" | "OTHER";
       pg_complaint_priority: "NORMAL" | "URGENT";
@@ -1705,10 +1825,12 @@ export const Constants = {
         "RETURN_CONFIRMATION",
         "RENT_DUE",
         "PAYMENT_RECEIPT",
+        "AGREEMENT_RENEWAL",
       ],
       payment_kind: ["PAYMENT", "REVERSAL"],
       payment_mode: ["CASH", "UPI", "CARD", "OTHER"],
       pg_adjustment_kind: ["CHARGE", "DISCOUNT"],
+      pg_agreement_status: ["ACTIVE", "RENEWED", "ENDED"],
       pg_complaint_category: [
         "ELECTRICAL",
         "PLUMBING",

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { FormMessage } from "@/components/ui/form";
 import { buildMessage, type MessageContext, type MessageType } from "@/lib/messages";
-import { buildPgMessage, PG_SAMPLE, type PgMessageType } from "@/lib/pg-messages";
+import { buildPgMessage, PG_MESSAGE_TYPES, PG_SAMPLE, type PgMessageType } from "@/lib/pg-messages";
 import { saveTemplate, type TemplateState } from "./actions";
 
 const SAMPLE: MessageContext = {
@@ -42,6 +42,9 @@ const SAMPLE: MessageContext = {
   paidPaise: 100000,
   amountDuePaise: 215000,
 };
+
+const isPg = (t: MessageType | PgMessageType): t is PgMessageType =>
+  (PG_MESSAGE_TYPES as string[]).includes(t);
 
 export function TemplateEditor({
   type,
@@ -88,14 +91,13 @@ export function TemplateEditor({
       />
       <details>
         <summary className="cursor-pointer text-sm font-medium text-brand-700">
-          Preview with sample{" "}
-          {type === "RENT_DUE" || type === "PAYMENT_RECEIPT" ? "resident" : "booking"}
+          Preview with sample {isPg(type) ? "resident" : "booking"}
         </summary>
         <pre
           className="mt-2 rounded-lg bg-stone-50 p-3 font-sans text-sm whitespace-pre-wrap"
           data-testid="template-preview"
         >
-          {type === "RENT_DUE" || type === "PAYMENT_RECEIPT"
+          {isPg(type)
             ? buildPgMessage(type, PG_SAMPLE, body, "WHATSAPP")
             : buildMessage(type, SAMPLE, body, "WHATSAPP")}
         </pre>

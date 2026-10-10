@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BackLink } from "@/components/back-link";
-import { formatDate, todayIST } from "@/lib/dates";
+import { addDays, formatDate, todayIST } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
 import { COMPLAINT_CATEGORY_LABEL, placeLabel, type ComplaintCategory } from "@/lib/pg";
 import { loadLiveStays } from "@/lib/pg-server";
@@ -16,24 +16,38 @@ export async function PgReports({ from, to }: { from?: string; to?: string }) {
   const range = resolveRange(from, to, today);
   const bounds = istDayBounds(range.from, range.to);
   const supabase = await createClient();
-  const [live, { data: rooms }, { data: pays, error }, { data: complaints }, { data: people }] =
-    await Promise.all([
-      loadLiveStays(supabase),
-      supabase
-        .from("pg_rooms")
-        .select("id, name, floor, rent_mode, beds:pg_beds (id, active)")
-        .eq("active", true)
-        .order("name"),
-      supabase
-        .from("pg_payments")
-        .select("amount_paise, mode, received_by, kind, purpose")
-        .gte("received_at", bounds.gte)
-        .lt("received_at", bounds.lt),
-      supabase.from("pg_complaints").select("category, status"),
-      supabase.from("profiles").select("id, name"),
-    ]);
+  const [
+    live,
+    { data: rooms },
+    { data: pays, error },
+    { data: complaints },
+    { data: people },
+    { data: agreements },
+  ] = await Promise.all([
+    loadLiveStays(supabase),
+    supabase
+      .from("pg_rooms")
+      .select("id, name, floor, rent_mode, beds:pg_beds (id, active)")
+      .eq("active", true)
+      .order("name"),
+    supabase
+      .from("pg_payments")
+      .select("amount_paise, mode, received_by, kind, purpose")
+      .gte("received_at", bounds.gte)
+      .lt("received_at", bounds.lt),
+    supabase.from("pg_complaints").select("category, status"),
+    supabase.from("profiles").select("id, name"),
+    supabase
+      .from("pg_agreements")
+      .select("id, stay_id, end_date")
+      .eq("status", "ACTIVE")
+      .lte("end_date", addDays(today, 60))
+      .order("end_date"),
+  ]);
   if (error) throw new Error("Couldn't load reports");
   const names = new Map((people ?? []).map((p) => [p.id, p.name]));
+  const liveById = new Map(live.map((s) => [s.stay.id, s.stay]));
+  const ending = (agreements ?? []).filter((a) => liveById.has(a.stay_id));
 
   const moneyIn = summarizeCollections((pays ?? []).filter((p) => p.purpose !== "REFUND"));
   const rentIn = (pays ?? [])
@@ -175,6 +189,37 @@ export async function PgReports({ from, to }: { from?: string; to?: string }) {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className={card} data-testid="pg-agreements-ending">
+        <h2 className="text-sm font-medium text-stone-500">
+          Agreements ending in the next 60 days
+        </h2>
+        {ending.length ? (
+          <ul className="mt-2 divide-y divide-stone-100 text-sm">
+            {ending.map((a) => {
+              const stay = liveById.get(a.stay_id)!;
+              return (
+                <li key={a.id}>
+                  <Link href={`/residents/${stay.id}`} className="flex justify-between gap-3 py-2">
+                    <span>
+                      {stay.customer?.name}
+                      <span className="block text-xs text-stone-500">
+                        {placeLabel(stay.room?.name ?? "?", stay.bed?.label ?? null)}
+                      </span>
+                    </span>
+                    <span className={a.end_date < today ? "font-semibold text-red-700" : ""}>
+                      {a.end_date < today ? "Expired " : ""}
+                      {formatDate(a.end_date)}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="mt-1 text-sm text-stone-600">None.</p>
+        )}
       </div>
 
       <div className={card} data-testid="pg-complaints-summary">

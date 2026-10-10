@@ -56,6 +56,7 @@ below is backed by an automated test (named in brackets).
 | pg_complaints | members | members of a writable PG; raiser/time forced | members of a writable PG; original text/raiser kept, resolver stamped | 97 |
 | pg_id_documents | members | members of a writable PG; path must be `<tenant>/<customer>/…` | owner: mark removed only (even read-only) | 97 |
 | storage.objects (`resident-ids`) | members, own `<tenant>/` folder only (app streams via `/api/id-photos/[id]`, no-store) | writable PG, own folder | none; delete: owner, own folder | 97, e2e |
+| pg_agreements | members | definer functions only: create (members of a writable PG), update/renew/attach document (owner); direct writes revoked; ended by trigger on move-out/cancel | same | 98 |
 | tenants.business_type | — | super admin at creation | never (trigger) | 97 |
 
 SECURITY DEFINER functions and their own checks: `cancel_booking`

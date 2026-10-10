@@ -63,7 +63,13 @@ export function SendPanel({
 
   function sendAuto() {
     startSending(async () => {
-      if (!orderId || type === "RENT_DUE" || type === "PAYMENT_RECEIPT") return;
+      if (
+        !orderId ||
+        type === "RENT_DUE" ||
+        type === "PAYMENT_RECEIPT" ||
+        type === "AGREEMENT_RENEWAL"
+      )
+        return;
       const r = await sendAutomatically(orderId, type);
       setAutoResult(
         r.ok

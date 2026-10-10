@@ -23,6 +23,8 @@ type MoveInField =
   | "place"
   | "startDate"
   | "deposit"
+  | "agreementMonths"
+  | "lockInMonths"
   | "rent"
   | "mealPlanId"
   | "emergencyMobile"
@@ -76,6 +78,17 @@ export async function moveIn(_prev: MoveInState, fd: FormData): Promise<MoveInSt
   if (rentRaw && (rent === null || rent > 100000000)) fieldErrors.rent = "Enter a valid rent";
   if (rentRaw && member.role !== "ADMIN")
     fieldErrors.rent = "Only the owner can set a different rent";
+  // Agreement created with the move-in (0 months = none).
+  const agreementMonths = Number(String(fd.get("agreementMonths") ?? "0").trim() || "0");
+  if (!Number.isInteger(agreementMonths) || agreementMonths < 0 || agreementMonths > 60)
+    fieldErrors.agreementMonths = "0 to 60 months";
+  const lockInMonths = Number(String(fd.get("lockInMonths") ?? "0").trim() || "0");
+  if (
+    !Number.isInteger(lockInMonths) ||
+    lockInMonths < 0 ||
+    lockInMonths > Math.min(24, agreementMonths || 24)
+  )
+    fieldErrors.lockInMonths = "Lock-in must be shorter than the agreement";
   const mealRaw = String(fd.get("mealPlanId") ?? "");
   const meal = mealRaw ? z.uuid().safeParse(mealRaw) : null;
   if (meal && !meal.success) fieldErrors.mealPlanId = "Choose a meal plan";
@@ -118,6 +131,28 @@ export async function moveIn(_prev: MoveInState, fd: FormData): Promise<MoveInSt
     if (error && FRIENDLY.has(error.code)) return { values, error: error.message };
     console.error("pg_move_in failed:", error?.message);
     return { values, error: "Couldn't save the move-in. Please try again." };
+  }
+  if (agreementMonths > 0) {
+    const { data: settings } = await supabase
+      .from("pg_settings")
+      .select("rent_increase_pct")
+      .maybeSingle();
+    const { data: agreementId, error: agreementError } = await supabase.rpc("pg_create_agreement", {
+      p_stay_id: stayId,
+      p_start: startDate,
+      p_months: agreementMonths,
+      p_lock_in_months: lockInMonths,
+      p_increase_pct: Number(settings?.rent_increase_pct ?? 0),
+    });
+    // The move-in stands either way; the agreement can be added on the resident page.
+    if (agreementError) console.error("pg_create_agreement failed:", agreementError.message);
+    else
+      await logAudit("pg.agreement_created", "pg_agreement", agreementId, {
+        stay_id: stayId,
+        start: startDate,
+        months: agreementMonths,
+        lock_in_months: lockInMonths,
+      });
   }
   await logAudit("pg.moved_in", "pg_stay", stayId, {
     customer_id: customerId,

@@ -40,6 +40,8 @@ export function ActionForm({
   return (
     <form
       action={formAction}
+      // The server checks every value and explains in plain words.
+      noValidate
       className={className}
       data-testid={testId}
       onSubmit={(e) => {

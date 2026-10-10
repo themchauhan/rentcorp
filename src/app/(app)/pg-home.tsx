@@ -4,6 +4,8 @@ import type { TenantMember } from "@/lib/auth/guards";
 import { addDays, formatDate, todayIST } from "@/lib/dates";
 import { formatRupees } from "@/lib/money";
 import { COMPLAINT_CATEGORY_LABEL, placeLabel } from "@/lib/pg";
+import { agreementState, suggestedRent } from "@/lib/pg-agreements";
+import { rateOn } from "@/lib/pg-dues";
 import { buildPgMessage } from "@/lib/pg-messages";
 import { loadLiveStays, loadPgTemplates, type LiveStay } from "@/lib/pg-server";
 import { createClient } from "@/lib/supabase/server";
@@ -85,7 +87,14 @@ function DueList({
 export async function PgHome({ profile }: { profile: TenantMember }) {
   const supabase = await createClient();
   const today = todayIST();
-  const [live, { data: rooms }, { data: complaints }, templates] = await Promise.all([
+  const [
+    live,
+    { data: rooms },
+    { data: complaints },
+    templates,
+    { data: settings },
+    { data: agreements },
+  ] = await Promise.all([
     loadLiveStays(supabase),
     supabase
       .from("pg_rooms")
@@ -98,6 +107,12 @@ export async function PgHome({ profile }: { profile: TenantMember }) {
       .order("raised_at", { ascending: false })
       .limit(50),
     loadPgTemplates(supabase),
+    supabase.from("pg_settings").select("agreement_alert_days").maybeSingle(),
+    supabase
+      .from("pg_agreements")
+      .select("id, stay_id, end_date, rent_increase_pct")
+      .eq("status", "ACTIVE")
+      .order("end_date"),
   ]);
 
   // Occupancy: a whole-room let counts as one place.
@@ -123,6 +138,16 @@ export async function PgHome({ profile }: { profile: TenantMember }) {
     .sort((a, b) => b.dues.daysOverdue - a.dues.daysOverdue || b.dues.amountDue - a.dues.amountDue);
   const dueToday = due.filter((s) => s.dues.daysOverdue === 0);
   const overdue = due.filter((s) => s.dues.daysOverdue > 0);
+  // Agreements ending within the alert window, or already past their end.
+  const alertDays = settings?.agreement_alert_days ?? 30;
+  const liveById = new Map(live.map((s) => [s.stay.id, s]));
+  const endingAgreements = (agreements ?? [])
+    .filter((a) => a.end_date <= addDays(today, alertDays) && liveById.has(a.stay_id))
+    .map((a) => ({
+      a,
+      s: liveById.get(a.stay_id)!,
+      state: agreementState(a.end_date, today, alertDays),
+    }));
   const leaving = live
     .filter(
       (s) => s.stay.status === "NOTICE" && (s.stay.planned_move_out ?? "") <= addDays(today, 7),
@@ -173,6 +198,103 @@ export async function PgHome({ profile }: { profile: TenantMember }) {
           <DueList list={overdue} testId="overdue" {...listProps} />
         ) : (
           <p className="text-sm text-stone-600">No overdue rent.</p>
+        )}
+      </div>
+
+      <div className={card} data-testid="agreements-ending">
+        <h2 className="mb-3 text-lg font-semibold">
+          Agreements ending soon ({endingAgreements.length})
+        </h2>
+        {endingAgreements.length ? (
+          <ul className="space-y-3">
+            {endingAgreements.map(({ a, s, state }) => {
+              const place = placeLabel(s.stay.room?.name ?? "?", s.stay.bed?.label ?? null);
+              const rate = rateOn(
+                s.stay.rates.map((r) => ({
+                  effectiveFrom: r.effective_from,
+                  rentPaise: r.rent_paise,
+                  mealPaise: r.meal_paise,
+                  electricityPaise: r.electricity_paise,
+                  mealPlanName: r.meal_plan_name,
+                })),
+                today,
+              );
+              const ctx = {
+                business: profile.tenant.name,
+                resident: s.stay.customer?.name ?? "",
+                place,
+                asOf: today,
+                dues: s.dues,
+                lastPayment: null,
+                agreement: {
+                  endDate: a.end_date,
+                  newRentPaise: rate
+                    ? suggestedRent(rate.rentPaise, Number(a.rent_increase_pct))
+                    : null,
+                },
+              };
+              return (
+                <li
+                  key={a.id}
+                  className="rounded-xl border border-stone-200 p-3"
+                  data-testid="agreement-row"
+                >
+                  <Link
+                    href={`/residents/${s.stay.id}`}
+                    className="flex items-start justify-between gap-3"
+                  >
+                    <span>
+                      <span className="font-semibold">{s.stay.customer?.name}</span>
+                      <span className="block text-sm text-stone-600">{place}</span>
+                    </span>
+                    <span
+                      className={`text-right text-sm font-medium ${state.kind === "expired" ? "text-red-700" : "text-amber-700"}`}
+                    >
+                      {state.kind === "expired"
+                        ? `Expired ${state.days} day${state.days === 1 ? "" : "s"} ago`
+                        : state.days === 0
+                          ? "Ends today"
+                          : `Ends in ${state.days} day${state.days === 1 ? "" : "s"}`}
+                      <span className="block text-xs font-normal text-stone-500">
+                        {formatDate(a.end_date)}
+                      </span>
+                    </span>
+                  </Link>
+                  {!profile.readOnly && s.stay.customer && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-sm font-medium text-brand-700">
+                        Send renewal message
+                      </summary>
+                      <div className="mt-2">
+                        <SendPanel
+                          stayId={s.stay.id}
+                          type="AGREEMENT_RENEWAL"
+                          title="Agreement renewal message"
+                          whatsappText={buildPgMessage(
+                            "AGREEMENT_RENEWAL",
+                            ctx,
+                            templates.AGREEMENT_RENEWAL,
+                            "WHATSAPP",
+                          )}
+                          smsText={buildPgMessage(
+                            "AGREEMENT_RENEWAL",
+                            ctx,
+                            templates.AGREEMENT_RENEWAL,
+                            "SMS",
+                          )}
+                          mobile={s.stay.customer.mobile}
+                          whatsappNumber={s.stay.customer.whatsapp_number}
+                          preferredChannel={s.stay.customer.preferred_channel}
+                        />
+                      </div>
+                    </details>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-sm text-stone-600">No agreements end in the next {alertDays} days.</p>
         )}
       </div>
 

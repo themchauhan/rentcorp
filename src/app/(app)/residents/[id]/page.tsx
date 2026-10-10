@@ -17,6 +17,7 @@ import {
   STAY_STATUS_LABEL,
   type IdType,
 } from "@/lib/pg";
+import { agreementState, inLockIn, suggestedRent } from "@/lib/pg-agreements";
 import { dueDates, rateOn } from "@/lib/pg-dues";
 import { buildPgMessage, PG_MESSAGE_TITLE, type PgMessageType } from "@/lib/pg-messages";
 import { duesFor, loadPgTemplates, STAY_SELECT } from "@/lib/pg-server";
@@ -33,6 +34,7 @@ import {
   withdrawNotice,
 } from "./actions";
 import { PgPaymentForm, SettleForm } from "./forms";
+import { AgreementCard, type AgreementRow } from "./agreement-card";
 import { IdPhotoUpload } from "./id-photo-upload";
 
 export const metadata: Metadata = { title: "Resident" };
@@ -71,6 +73,7 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
     { data: settings },
     templates,
     { data: staff },
+    { data: agreements },
   ] = await Promise.all([
     supabase
       .from("pg_resident_details")
@@ -93,9 +96,21 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
       .select("id, name, monthly_paise")
       .eq("active", true)
       .order("name"),
-    supabase.from("pg_settings").select("notice_days").maybeSingle(),
+    supabase
+      .from("pg_settings")
+      .select(
+        "notice_days, agreement_months, lock_in_months, rent_increase_pct, agreement_alert_days",
+      )
+      .maybeSingle(),
     loadPgTemplates(supabase),
     supabase.from("profiles").select("id, name"),
+    supabase
+      .from("pg_agreements")
+      .select(
+        "id, start_date, end_date, lock_in_until, rent_increase_pct, status, document_type, document_uploaded_at",
+      )
+      .eq("stay_id", stay.id)
+      .order("start_date", { ascending: false }),
   ]);
 
   const today = todayIST();
@@ -126,6 +141,19 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
   const payments = [...stay.payments].sort((a, b) => (a.received_at < b.received_at ? 1 : -1));
   const lastPayment = payments.find((p) => p.kind === "PAYMENT" && p.purpose === "RENT");
 
+  // Agreement: the current one, else the latest; older ones as history.
+  const allAgreements = (agreements ?? []) as AgreementRow[];
+  const agreement =
+    allAgreements.find((a) => a.status === "ACTIVE") ?? (live ? null : (allAgreements[0] ?? null));
+  const agreementHistory = allAgreements.filter((a) => a !== agreement);
+  const alertDays = settings?.agreement_alert_days ?? 30;
+  const agreementAlert =
+    agreement?.status === "ACTIVE" &&
+    agreementState(agreement.end_date, today, alertDays).kind !== "ok";
+  const lockIn = agreement?.status === "ACTIVE" ? agreement.lock_in_until : null;
+  const renewalRent =
+    agreement && current ? suggestedRent(current.rentPaise, agreement.rent_increase_pct) : null;
+
   // Messages
   const ctx = {
     business: profile.tenant.name,
@@ -136,10 +164,12 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
     lastPayment: lastPayment
       ? { amountPaise: lastPayment.amount_paise, date: lastPayment.received_at.slice(0, 10) }
       : null,
+    agreement: agreement ? { endDate: agreement.end_date, newRentPaise: renewalRent } : null,
   };
   const messageTypes: PgMessageType[] = [
     ...(dues.amountDue > 0 ? (["RENT_DUE"] as const) : []),
     ...(lastPayment ? (["PAYMENT_RECEIPT"] as const) : []),
+    ...(agreementAlert && live ? (["AGREEMENT_RENEWAL"] as const) : []),
   ];
 
   // Next due dates the owner can start new rates from.
@@ -250,6 +280,24 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
           </p>
         ))}
       </div>
+
+      <AgreementCard
+        stayId={stay.id}
+        stayStart={stay.start_date}
+        live={live}
+        agreement={agreement}
+        history={agreementHistory}
+        today={today}
+        alertDays={alertDays}
+        defaults={{
+          months: settings?.agreement_months ?? 11,
+          lockInMonths: settings?.lock_in_months ?? 0,
+          increasePct: Number(settings?.rent_increase_pct ?? 0),
+        }}
+        currentRentPaise={current?.rentPaise ?? null}
+        isOwner={isOwner}
+        canWrite={canWrite}
+      />
 
       {canWrite &&
         messageTypes.map((type) => (
@@ -508,6 +556,15 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
                 />
               </div>
               <p className="text-xs text-stone-500">Notice period: {noticeDays} days.</p>
+              {inLockIn(lockIn, today) && (
+                <p
+                  className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                  data-testid="lock-in-warning"
+                >
+                  Lock-in runs until {formatDate(lockIn!)}. Leaving now breaks the lock-in; you can
+                  add a deduction at move-out.
+                </p>
+              )}
             </ActionForm>
           ) : (
             <div className="space-y-3">
@@ -526,6 +583,15 @@ export default async function ResidentPage({ params, searchParams }: PageProps<"
           {isOwner && (
             <div className="mt-5 border-t border-stone-100 pt-4">
               <h3 className="mb-2 font-semibold">Move-out settlement</h3>
+              {stay.notice_given_on && inLockIn(lockIn, stay.notice_given_on) && (
+                <p
+                  className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                  data-testid="lock-in-warning"
+                >
+                  Notice was given during the lock-in (until {formatDate(lockIn!)}). Add a deduction
+                  below if the agreement says so.
+                </p>
+              )}
               <p className="mb-3 text-sm text-stone-600">
                 Deposit held {formatRupees(dues.depositHeld)} is set against what’s owed. Any
                 deductions are added first.

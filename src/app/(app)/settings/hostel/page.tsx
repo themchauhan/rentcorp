@@ -17,7 +17,9 @@ export default async function HostelSettingsPage() {
   const [{ data: settings }, { data: plans }] = await Promise.all([
     supabase
       .from("pg_settings")
-      .select("electricity_paise, deposit_paise, notice_days")
+      .select(
+        "electricity_paise, deposit_paise, notice_days, agreement_months, lock_in_months, rent_increase_pct, agreement_alert_days",
+      )
       .maybeSingle(),
     supabase
       .from("pg_meal_plans")
@@ -62,6 +64,42 @@ export default async function HostelSettingsPage() {
               max={180}
               defaultValue={settings?.notice_days ?? 30}
             />
+            <h3 className="pt-2 font-semibold">Agreements</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Field
+                label="Length (months)"
+                name="agreementMonths"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={60}
+                defaultValue={settings?.agreement_months ?? 11}
+              />
+              <Field
+                label="Lock-in (months)"
+                name="lockInMonths"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={24}
+                defaultValue={settings?.lock_in_months ?? 0}
+              />
+              <Field
+                label="Rent increase on renewal (%)"
+                name="increasePct"
+                inputMode="decimal"
+                defaultValue={Number(settings?.rent_increase_pct ?? 5)}
+              />
+              <Field
+                label="Remind before end (days)"
+                name="alertDays"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={120}
+                defaultValue={settings?.agreement_alert_days ?? 30}
+              />
+            </div>
           </ActionForm>
         </fieldset>
       </div>

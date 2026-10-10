@@ -33,6 +33,7 @@ const MESSAGE_LABEL = {
   RETURN_CONFIRMATION: "Final bill",
   RENT_DUE: "Rent due",
   PAYMENT_RECEIPT: "Payment receipt",
+  AGREEMENT_RENEWAL: "Agreement renewal",
 } as const;
 const CHANNEL_LABEL = {
   WHATSAPP: "opened in WhatsApp",

@@ -101,6 +101,26 @@ export const settingsSchema = z.object({
     .int("Enter whole days")
     .min(0, "0 to 180 days")
     .max(180, "0 to 180 days"),
+  agreementMonths: z.coerce
+    .number({ error: "Enter the agreement length in months" })
+    .int("Enter whole months")
+    .min(1, "1 to 60 months")
+    .max(60, "1 to 60 months"),
+  lockInMonths: z.coerce
+    .number({ error: "Enter the lock-in in months" })
+    .int("Enter whole months")
+    .min(0, "0 to 24 months")
+    .max(24, "0 to 24 months"),
+  increasePct: z.coerce
+    .number({ error: "Enter the yearly increase %" })
+    .min(0, "0 to 50%")
+    .max(50, "0 to 50%")
+    .transform((n) => Math.round(n * 100) / 100),
+  alertDays: z.coerce
+    .number({ error: "Enter how many days before to remind" })
+    .int("Enter whole days")
+    .min(0, "0 to 120 days")
+    .max(120, "0 to 120 days"),
 });
 
 export const mealPlanSchema = z.object({

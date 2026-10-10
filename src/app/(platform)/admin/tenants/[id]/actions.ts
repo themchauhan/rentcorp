@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth/guards";
 import { isIsoDate } from "@/lib/dates";
 import { parseRupeesToPaise } from "@/lib/money";
 import { endOfIstDay, extendedEnd, istDateOf } from "@/lib/subscriptions";
+import { removeBusinessFiles } from "@/lib/storage-cleanup";
 import { createClient } from "@/lib/supabase/server";
 import { disconnectConnection, saveConnection, sendTestMessage } from "@/lib/whatsapp/connection";
 
@@ -266,6 +267,13 @@ export async function deleteTestBusiness(
       return { error: error.message };
     console.error("delete_test_business failed:", error.code, error.message);
     return { error: "Couldn't delete. Nothing was changed." };
+  }
+  // The rows are gone; now its private files (ID photos, agreements).
+  try {
+    await removeBusinessFiles(id.data);
+  } catch (e) {
+    // Harmless leftovers (nobody can reach them); logged for a manual sweep.
+    console.error("removeBusinessFiles failed:", id.data, (e as Error).message);
   }
   revalidatePath("/admin");
   redirect(`/admin?deleted=${encodeURIComponent(confirm)}`);
